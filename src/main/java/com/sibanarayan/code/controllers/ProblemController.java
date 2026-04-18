@@ -1,6 +1,5 @@
 package com.sibanarayan.code.controllers;
 
-import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
 import com.sibanarayan.code.models.response.ProblemResponse;
@@ -33,6 +32,11 @@ public class ProblemController {
     public ResponseEntity<Page<ProblemResponse>> getProblems(
             @ModelAttribute ProblemFilterRequest filter) {
         return ResponseEntity.ok(problemService.getProblems(filter));
+    }
+
+    @GetMapping("/{problemId}")
+    public ResponseEntity<ProblemResponse> getProblemById(@PathVariable UUID problemId) {
+        return ResponseEntity.ok(problemService.getProblemById(problemId));
     }
 
     @DeleteMapping("/{problemId}")

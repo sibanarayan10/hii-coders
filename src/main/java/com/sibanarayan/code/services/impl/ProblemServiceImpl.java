@@ -95,6 +95,14 @@ public class ProblemServiceImpl implements ProblemService {
                 });
     }
 
+    @Override
+    public ProblemResponse getProblemById(UUID problemId) {
+        Problem problem = problemRepository.findById(problemId)
+                .filter(p -> p.getRecordStatus() == RecordStatus.ACTIVE)
+                .orElseThrow(() -> new ResourceNotFoundException("Problem not found"));
+        return mapToResponse(problem);
+    }
+
     private ProblemResponse mapToResponse(Problem entity) {
         return ProblemResponse.builder()
                 .id(entity.getId())

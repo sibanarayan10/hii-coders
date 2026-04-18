@@ -12,4 +12,5 @@ public interface ProblemService {
     ProblemResponse createProblem(CreateProblemRequest request, UUID adminId);
     void deleteProblem(UUID problemId);
     Page<ProblemResponse> getProblems(ProblemFilterRequest filter);
+    ProblemResponse getProblemById(UUID problemId);
 }
