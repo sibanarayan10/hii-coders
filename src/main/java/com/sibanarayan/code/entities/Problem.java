@@ -22,7 +22,7 @@ public class Problem extends Base {
 
     private String title;
 
-    @Column(name="desc")
+    @Column(name="description")
     private String description;
 
     @Column(nullable = false, length = 10)

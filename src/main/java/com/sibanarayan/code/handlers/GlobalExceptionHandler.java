@@ -4,6 +4,7 @@ package com.sibanarayan.code.handlers;
 import com.sibanarayan.code.exceptions.EntityAlreadyExistException;
 import com.sibanarayan.code.exceptions.ResourceNotFoundException;
 import com.sibanarayan.code.exceptions.UnauthorizedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -29,7 +31,6 @@ public class GlobalExceptionHandler {
                 .forEach(error ->
                         errors.put(error.getField(), error.getDefaultMessage())
                 );
-
         return ResponseEntity.badRequest().body(errors);
     }
 
@@ -62,6 +63,8 @@ public class GlobalExceptionHandler {
     // ── 500 Fallback ─────────────────────────────────────────────────────────
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
+        log.error("Unexpected error occurred", ex);
+
         return build(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred");
     }

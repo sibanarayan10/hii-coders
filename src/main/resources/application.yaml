@@ -2,12 +2,15 @@ spring:
   application:
     name: hii-coders
   datasource:
-    url:
-    username:
-    password:
+    url: jdbc:postgresql://localhost:5432/problemservice
+    username: postgres
+    password: mshiv001
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
-    show-sql:
-    open-in-view:
+      ddl-auto: validate
+    show-sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
