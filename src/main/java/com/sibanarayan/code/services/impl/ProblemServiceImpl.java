@@ -47,7 +47,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .build();
 
         Problem saved = problemRepository.save(problem);
-//        publishEvent(saved.getId(), saved.getTitle(), ProblemEventType.PROBLEM_CREATED);
+        publishEvent(saved.getId(), saved.getTitle(), ProblemEventType.PROBLEM_CREATED);
         return mapToResponse(saved);
     }
 
