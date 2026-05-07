@@ -4,6 +4,8 @@ import com.sibanarayan.code.enums.StorageType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "test_cases", indexes = {
         @Index(name = "idx_testcase_problem_id", columnList = "problem_id")
@@ -40,5 +42,11 @@ public class TestCase extends Base {
     @Enumerated(EnumType.STRING)
     @Column(name = "storage_type", nullable = false)
     private StorageType storageType;
+
+    @Column(name = "time_limit")
+    private Integer timeLimit;
+
+    @Column(name = "memory_limit")
+    private Integer memoryLimit;
 
 }

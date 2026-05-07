@@ -1,4 +1,4 @@
-package com.sibanarayan.code.repositories;
+package com.sibanarayan.code.repository;
 
 import com.sibanarayan.code.entities.CustomTestCase;
 import org.springframework.data.jpa.repository.JpaRepository;

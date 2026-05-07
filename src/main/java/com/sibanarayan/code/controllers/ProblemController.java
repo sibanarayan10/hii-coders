@@ -2,7 +2,9 @@ package com.sibanarayan.code.controllers;
 
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
+import com.sibanarayan.code.models.request.TestCaseRequest;
 import com.sibanarayan.code.models.response.ProblemResponse;
+import com.sibanarayan.code.models.response.TestCaseResponse;
 import com.sibanarayan.code.services.ProblemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -43,5 +46,15 @@ public class ProblemController {
     public ResponseEntity<Void> deleteProblem(@PathVariable UUID problemId) {
         problemService.deleteProblem(problemId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{problemId}/testCases")
+    public ResponseEntity<List<TestCaseResponse>> getTestCasesByProblem(@PathVariable UUID problemId) {
+        return ResponseEntity.ok(problemService.getTestCasesByProblemId(problemId));
+    }
+
+    @PostMapping("/{problemId}/testCase")
+    public ResponseEntity<Boolean> createTestCase(@RequestBody TestCaseRequest request) {
+        return ResponseEntity.ok(problemService.createTestCase(request));
     }
 }

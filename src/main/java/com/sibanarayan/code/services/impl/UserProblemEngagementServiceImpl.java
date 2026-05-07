@@ -11,7 +11,7 @@ import com.sibanarayan.code.models.request.CustomTestCaseRequest;
 import com.sibanarayan.code.models.request.EngagementRequest;
 import com.sibanarayan.code.models.response.CustomTestCaseResponse;
 import com.sibanarayan.code.models.response.EngagementResponse;
-import com.sibanarayan.code.repositories.CustomTestCaseRepository;
+import com.sibanarayan.code.repository.CustomTestCaseRepository;
 import com.sibanarayan.code.repository.ProblemRepository;
 import com.sibanarayan.code.repository.UserProblemEngagementRepository;
 import com.sibanarayan.code.services.UserProblemEngagementService;

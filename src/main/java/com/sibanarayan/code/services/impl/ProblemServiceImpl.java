@@ -1,6 +1,7 @@
 package com.sibanarayan.code.services.impl;
 
 import com.sibanarayan.code.entities.Problem;
+import com.sibanarayan.code.entities.TestCase;
 import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.enums.ProblemEventType;
 import com.sibanarayan.code.enums.RecordStatus;
@@ -8,8 +9,11 @@ import com.sibanarayan.code.events.ProblemEvent;
 import com.sibanarayan.code.exceptions.ResourceNotFoundException;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
+import com.sibanarayan.code.models.request.TestCaseRequest;
 import com.sibanarayan.code.models.response.ProblemResponse;
+import com.sibanarayan.code.models.response.TestCaseResponse;
 import com.sibanarayan.code.repository.ProblemRepository;
+import com.sibanarayan.code.repository.TestCaseRepository;
 import com.sibanarayan.code.services.ProblemService;
 import com.sibanarayan.code.specifications.ProblemSpecification;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.Pageable;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,6 +38,7 @@ public class ProblemServiceImpl implements ProblemService {
 
     private final ProblemRepository problemRepository;
     private final KafkaTemplate<String, ProblemEvent> kafkaTemplate;
+    private final TestCaseRepository testCaseRepository;
 
     private static final String PROBLEM_TOPIC = "problem.events";
 
@@ -112,6 +119,44 @@ public class ProblemServiceImpl implements ProblemService {
                 .categories(entity.getCategories())
                 .createdAt(entity.getCreatedAt())
                 .build();
+    }
+    private TestCaseResponse mapToResponse(TestCase testCase){
+        return TestCaseResponse.builder()
+                .id(testCase.getId())
+                .inputData(testCase.getInputData())
+                .expectedOutput(testCase.getExpectedOutput())
+                .sample(testCase.isSample())
+                .build();
+    }
+
+    public List<TestCaseResponse> getTestCasesByProblemId(UUID problemId) {
+        var result= testCaseRepository.getByProblemId(problemId).stream()
+                .filter(tc -> tc.getRecordStatus() == RecordStatus.ACTIVE)
+                .map(this::mapToResponse)
+                .toList();
+        return result;
+    }
+
+    public Boolean createTestCase(TestCaseRequest request) {
+        var problem = problemRepository.findById(request.getProblemId())
+                .orElseThrow(() -> new ResourceNotFoundException("Problem not found"));
+
+        TestCase testCase = TestCase.builder()
+                .problem(problem)
+                .sample(request.isSample())
+                .expectedOutput(request.getExpectedOutput())
+                .inputData(request.getInputData())
+                .outputFileKey(request.getOutputFileKey())
+                .inputFileKey(request.getInputFileKey())
+                .storageType(request.getStorageType())
+                .sequenceOrder(request.getSequenceOrder())
+                .memoryLimit(request.getMemoryLimit())
+                .timeLimit(request.getTimeLimit())
+                .build();
+
+        testCaseRepository.save(testCase);
+
+        return true;
     }
 }
 
