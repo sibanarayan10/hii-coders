@@ -8,6 +8,7 @@ import com.sibanarayan.code.models.response.TestCaseResponse;
 import com.sibanarayan.code.services.ProblemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/problems")
 @RequiredArgsConstructor
+@Slf4j
 public class ProblemController {
 
     private final ProblemService problemService;
@@ -34,6 +36,7 @@ public class ProblemController {
     @GetMapping
     public ResponseEntity<Page<ProblemResponse>> getProblems(
             @ModelAttribute ProblemFilterRequest filter) {
+        log.info("Request reached");
         return ResponseEntity.ok(problemService.getProblems(filter));
     }
 

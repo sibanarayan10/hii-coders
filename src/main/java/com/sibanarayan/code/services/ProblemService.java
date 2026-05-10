@@ -1,6 +1,5 @@
 package com.sibanarayan.code.services;
 
-import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
 import com.sibanarayan.code.models.request.TestCaseRequest;
@@ -18,4 +17,5 @@ public interface ProblemService {
     ProblemResponse getProblemById(UUID problemId);
     List<TestCaseResponse> getTestCasesByProblemId(UUID problemId);
     Boolean createTestCase(TestCaseRequest request);
+    Page<ProblemResponse> getSystemProblems(ProblemFilterRequest filter);
 }

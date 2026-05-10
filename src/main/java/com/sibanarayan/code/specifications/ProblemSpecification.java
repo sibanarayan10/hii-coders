@@ -20,7 +20,7 @@ public class ProblemSpecification {
 
     private static Specification<Problem> isActive() {
         return (root, query, cb) ->
-                cb.equal(root.get("record_status"), RecordStatus.ACTIVE);
+                cb.equal(root.get("recordStatus"), RecordStatus.ACTIVE);
     }
 
     private static Specification<Problem> hasDifficulty(ProblemDifficulty difficulty) {

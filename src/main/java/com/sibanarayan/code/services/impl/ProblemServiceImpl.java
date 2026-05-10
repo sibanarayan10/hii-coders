@@ -71,6 +71,18 @@ public class ProblemServiceImpl implements ProblemService {
                 .map(this::mapToResponse);
     }
 
+    public Page<ProblemResponse> getSystemProblems(ProblemFilterRequest filter) {
+        Pageable pageable =PageRequest.of(
+                filter.getPage(),
+                filter.getSize(),
+                Sort.by("createdAt").descending()
+        );
+
+        return problemRepository
+                .findAll(ProblemSpecification.withFilters(filter),pageable)
+                .map(this::mapToResponse);
+    }
+
     @Override
     @Transactional
     public void deleteProblem(UUID problemId) {
@@ -116,7 +128,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .title(entity.getTitle())
                 .description(entity.getDescription())
                 .difficulty(entity.getDifficulty())
-                .categories(entity.getCategories())
+                .category(entity.getCategories())
                 .createdAt(entity.getCreatedAt())
                 .build();
     }
