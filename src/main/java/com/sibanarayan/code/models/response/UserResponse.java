@@ -1,5 +1,6 @@
 package com.sibanarayan.code.models.response;
 
+import com.sibanarayan.code.enums.RecordStatus;
 import com.sibanarayan.code.enums.UserRole;
 import lombok.*;
 
@@ -10,9 +11,10 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponse {
+public class UserResponse {
     private UUID id;
     private String email;
     private String name;
     private UserRole role;
+    private RecordStatus recordStatus;
 }

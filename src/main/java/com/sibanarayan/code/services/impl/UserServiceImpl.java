@@ -1,10 +1,12 @@
 package com.sibanarayan.code.services.impl;
 
 import com.sibanarayan.code.entities.User;
+import com.sibanarayan.code.enums.RecordStatus;
 import com.sibanarayan.code.enums.UserRole;
 import com.sibanarayan.code.models.request.CreateUserRequest;
 import com.sibanarayan.code.models.request.LoginRequest;
-import com.sibanarayan.code.models.response.LoginResponse;
+import com.sibanarayan.code.models.response.ProblemResponse;
+import com.sibanarayan.code.models.response.UserResponse;
 import com.sibanarayan.code.repository.UserRepository;
 import com.sibanarayan.code.security.JwtFilter;
 import com.sibanarayan.code.services.UserService;
@@ -19,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -50,7 +53,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return true;
     }
-    public LoginResponse loginUser(LoginRequest request, HttpServletResponse response){
+    public UserResponse loginUser(LoginRequest request, HttpServletResponse response){
         String email= request.getEmail();
         Optional<User> optUser=userRepository.findByEmail(email);
 
@@ -80,7 +83,20 @@ public class UserServiceImpl implements UserService {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return LoginResponse.builder()
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(user.getRole())
+                .recordStatus(RecordStatus.ACTIVE)
+                .build();
+    }
+
+    public UserResponse getMe( String email){
+
+        User user=getUser(email);
+
+        return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getName())
@@ -88,24 +104,30 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    public LoginResponse getMe( HttpServletRequest request){
-        String token=filter.extractTokenFromCookie(request);
-        String email= jwtUtility.getEmail(token);
+    public List<UserResponse> getUsers(String email){
+        getUser(email);
 
+        List<User> users= userRepository.findAll();
+
+        return users.stream().filter(user->!user.getEmail().equals(email))
+                .map(user->UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .recordStatus(user.getRecordStatus())
+                .role(user.getRole())
+                .build()).toList();
+    }
+
+
+    private User getUser(String email){
         Optional<User> optUser=userRepository.findByEmail(email);
 
         if(optUser.isEmpty()){
             throw new ResourceNotFoundException("User not found");
         }
 
-        User user=optUser.get();
-
-        return LoginResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .name(user.getName())
-                .role(user.getRole())
-                .build();
+        return optUser.get();
     }
 
 
