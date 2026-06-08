@@ -1,4 +1,4 @@
-package com.sibanarayan.code.security;
+package com.sibanarayan.code.config;
 
 
 import org.springframework.beans.factory.annotation.Value;

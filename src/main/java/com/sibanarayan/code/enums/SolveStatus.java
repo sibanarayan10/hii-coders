@@ -1,7 +1,7 @@
 package com.sibanarayan.code.enums;
 
 public enum SolveStatus {
-    UNSOLVED,
+    TODO,
     ATTEMPTED,
     SOLVED
 }

@@ -1,13 +1,16 @@
 package com.sibanarayan.code.entities;
 
+import com.sibanarayan.code.enums.Company;
 import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.enums.ProblemsCategory;
+import com.sibanarayan.code.enums.ProgrammingLanguage;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import com.sibanarayan.code.models.request.CreateProblemRequest;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name="problems",indexes = {
@@ -22,8 +25,9 @@ public class Problem extends Base {
 
     private String title;
 
-    @Column(name="description")
-    private String description;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "blocks", columnDefinition = "jsonb")
+    private List<CreateProblemRequest.Block> blocks;
 
     @Column(nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
@@ -35,8 +39,34 @@ public class Problem extends Base {
     @Column(name = "category")
     private Set<ProblemsCategory> categories = new HashSet<>();
 
+    @ElementCollection(targetClass = Company.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "problem_companies", joinColumns = @JoinColumn(name = "problem_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "company")
+    private Set<Company> companies = new HashSet<>();
+
     @Column(name="created_by",nullable = false,updatable = false)
     private UUID createdBy;
+//
+//    @ElementCollection(fetch = FetchType.EAGER)
+//    @CollectionTable(
+//            name = "problem_examples",
+//            joinColumns = @JoinColumn(name = "problem_id")
+//    )
+//    private Set<Example> example;
 
+    @Column(name="runtime_ms")
+    private Integer runtimeMs;
+
+    @Column(name="memory")
+    private Integer memory;
+
+    @Column(name="solution_by_language",columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<ProgrammingLanguage,String> solutionsByLanguage=new HashMap<>();
+
+    @Column(name="io_by_language",columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<ProgrammingLanguage,String> ioByLanguage=new HashMap<>();
 
 }

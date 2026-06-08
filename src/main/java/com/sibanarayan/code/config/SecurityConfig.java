@@ -1,4 +1,4 @@
-package com.sibanarayan.code.security;
+package com.sibanarayan.code.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +32,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
-        http
+                http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->

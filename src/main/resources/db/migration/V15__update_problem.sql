@@ -1,0 +1,3 @@
+ALTER TABLE problems
+ADD COLUMN runtime_ms INTEGER,
+ADD COLUMN memory INTEGER;

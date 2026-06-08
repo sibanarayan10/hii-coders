@@ -33,6 +33,6 @@ public class UserProblemEngagement extends Base {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "solve_status", nullable = false, length = 15)
-    private SolveStatus solveStatus = SolveStatus.UNSOLVED;
+    private SolveStatus solveStatus = SolveStatus.TODO;
 
 }

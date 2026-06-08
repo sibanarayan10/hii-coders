@@ -23,6 +23,20 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: false
+    consumer:
+      group-id: submission-result
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      max-poll-records: 10
+      fetch-min-size: 1
+      fetch-max-wait: 500ms
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.sibanarayan.code.events"
+      listener:
+        ack-mode: RECORD
+
   cors:
     allowed-origins: "http://localhost:5173"
 server:

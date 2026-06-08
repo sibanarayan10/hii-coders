@@ -1,4 +1,4 @@
-package com.sibanarayan.code.security;
+package com.sibanarayan.code.config;
 
 import com.sibanarayan.code.utility.JwtUtility;
 import com.sibanarayan.code.utility.UserPrincipal;
@@ -39,11 +39,14 @@ import java.util.UUID;
 
             String token=extractTokenFromCookie(request);
             if (token!=null && jwtUtil.isTokenValid(token)) {
-                List<GrantedAuthority> authorities =
-                        List.of(new SimpleGrantedAuthority("ROLE_USER"));
                 String email = jwtUtil.getEmail(token);
                 UUID userId=jwtUtil.getUserId(token);
-                UserPrincipal up=new UserPrincipal(email,userId);
+                String role= jwtUtil.getRole(token);
+
+                List<GrantedAuthority> authorities =
+                        List.of(new SimpleGrantedAuthority("ROLE_"+ role));
+
+                UserPrincipal up=new UserPrincipal(userId,email,role);
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 up,

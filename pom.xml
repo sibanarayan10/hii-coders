@@ -72,7 +72,8 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<optional>true</optional>
+			<version>1.18.36</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
@@ -87,14 +88,27 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
-
-		<!-- JSON serialization -->
+		<dependency>
+			<groupId>com.querydsl</groupId>
+			<artifactId>querydsl-jpa</artifactId>
+			<version>5.1.0</version>
+			<classifier>jakarta</classifier>
+		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.querydsl</groupId>
+			<artifactId>querydsl-apt</artifactId>
+			<version>5.1.0</version>
+			<classifier>jakarta</classifier>
+			<scope>provided</scope>
+		</dependency>
+		<!-- JSON serialization -->
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -110,54 +124,49 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
 				<configuration>
-					<excludes>
-						<exclude>
+					<annotationProcessorPaths>
+						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
+							<version>1.18.36</version>  <!-- ← add this -->
+						</path>
+						<path>
+							<groupId>com.querydsl</groupId>
+							<artifactId>querydsl-apt</artifactId>
+							<version>5.1.0</version>
+							<classifier>jakarta</classifier>
+						</path>
+						<path>
+							<groupId>jakarta.persistence</groupId>
+							<artifactId>jakarta.persistence-api</artifactId>
+							<version>3.1.0</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>default-compile</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<configuration>
-							<annotationProcessorPaths>
-								<path>
-									<groupId>org.projectlombok</groupId>
-									<artifactId>lombok</artifactId>
-								</path>
-							</annotationProcessorPaths>
-						</configuration>
-					</execution>
-					<execution>
-						<id>default-testCompile</id>
-						<phase>test-compile</phase>
-						<goals>
-							<goal>testCompile</goal>
-						</goals>
-						<configuration>
-							<annotationProcessorPaths>
-								<path>
-									<groupId>org.projectlombok</groupId>
-									<artifactId>lombok</artifactId>
-								</path>
-							</annotationProcessorPaths>
-						</configuration>
-					</execution>
-				</executions>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<classifier>exec</classifier>
+				</configuration>
 			</plugin>
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*</include>  <!-- restore default behaviour -->
+				</includes>
+				<excludes>
+					<exclude>db/migration/**</exclude>
+				</excludes>
+			</resource>
+		</resources>
 	</build>
 
 </project>

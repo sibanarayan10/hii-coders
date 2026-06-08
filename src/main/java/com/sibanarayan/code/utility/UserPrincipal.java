@@ -1,5 +1,6 @@
 package com.sibanarayan.code.utility;
 
+import com.sibanarayan.code.enums.UserRole;
 import lombok.*;
 
 import java.util.UUID;
@@ -12,4 +13,5 @@ import java.util.UUID;
 public class UserPrincipal {
     private UUID userId;
     private String email;
+    private String role;
 }

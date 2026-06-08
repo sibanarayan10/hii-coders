@@ -13,6 +13,5 @@ public class TestCaseResponse {
     private UUID id;
     private String inputData;
     private String expectedOutput;
-    private boolean sample;
     private int sequenceOrder;
 }

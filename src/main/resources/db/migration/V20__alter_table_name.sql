@@ -1,0 +1,1 @@
+ALTER TABLE user_dashboard RENAME TO submission_result_snapshot;

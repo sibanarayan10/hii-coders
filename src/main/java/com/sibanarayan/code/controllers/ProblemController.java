@@ -1,13 +1,17 @@
 package com.sibanarayan.code.controllers;
 
 import com.sibanarayan.code.customAnnotation.Role;
+import com.sibanarayan.code.models.request.AdminProblemPageFilter;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
 import com.sibanarayan.code.models.request.TestCaseRequest;
+import com.sibanarayan.code.models.response.AdminProblemResponse;
 import com.sibanarayan.code.models.response.ProblemResponse;
+import com.sibanarayan.code.models.response.ProblemUserEngagementResponse;
 import com.sibanarayan.code.models.response.TestCaseResponse;
-import com.sibanarayan.code.models.response.UserResponse;
+import com.sibanarayan.code.config.JwtFilter;
 import com.sibanarayan.code.services.ProblemService;
+import com.sibanarayan.code.utility.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,31 +31,50 @@ import java.util.UUID;
 public class ProblemController {
 
     private final ProblemService problemService;
+    private final JwtFilter jwtFilter;
+    private final JwtUtility jwtUtility;
 
     @PostMapping
-    public ResponseEntity<ProblemResponse> createProblem(
-            @RequestBody @Valid CreateProblemRequest request,
-            @RequestHeader("X-User-Id") UUID adminId) {
+    @Role("ADMIN")
+    public ResponseEntity<ProblemResponse> createProblem(HttpServletRequest request,
+            @RequestBody @Valid CreateProblemRequest problemRequest) {
+        String token=jwtFilter.extractTokenFromCookie(request);
+        UUID adminId=jwtUtility.getUserId(token);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(problemService.createProblem(request, adminId));
+                .body(problemService.createProblem(problemRequest, adminId));
     }
 
     @GetMapping
     public ResponseEntity<Page<ProblemResponse>> getProblems(
-            @ModelAttribute ProblemFilterRequest filter) {
-        log.info("Request reached");
-        return ResponseEntity.ok(problemService.getProblems(filter));
+            @ModelAttribute ProblemFilterRequest filter,HttpServletRequest request) {
+        String token= jwtFilter.extractTokenFromCookie(request);
+        UUID userId=jwtUtility.getUserId(token);
+        return ResponseEntity.ok(problemService.getProblems(filter,userId));
+    }
+
+    @GetMapping("system")
+    @Role("ADMIN")
+    public ResponseEntity<Page<AdminProblemResponse>> getSystemProblems(@ModelAttribute AdminProblemPageFilter filter){
+        return ResponseEntity.ok(problemService.getSystemProblems(filter));
     }
 
     @GetMapping("/{problemId}")
-    public ResponseEntity<ProblemResponse> getProblemById(@PathVariable UUID problemId) {
-        return ResponseEntity.ok(problemService.getProblemById(problemId));
+    public ResponseEntity<ProblemUserEngagementResponse> getProblemUserEngagementDetail(@PathVariable UUID problemId, HttpServletRequest request) {
+        String token= jwtFilter.extractTokenFromCookie(request);
+        UUID userId=jwtUtility.getUserId(token);
+        return ResponseEntity.ok(problemService.getProblemUserEngagementDetail(problemId,userId));
     }
 
-    @DeleteMapping("/{problemId}")
-    public ResponseEntity<Void> deleteProblem(@PathVariable UUID problemId) {
+    @GetMapping("/{problemId}/detail")
+    public ResponseEntity<ProblemResponse> getProblem(@PathVariable UUID problemId) {
+        return ResponseEntity.ok(problemService.getProblem(problemId));
+    }
+
+    @PutMapping("/{problemId}")
+    @Role("ADMIN")
+    public ResponseEntity<Boolean> deleteProblem(@PathVariable UUID problemId) {
         problemService.deleteProblem(problemId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(true);
     }
 
     @GetMapping("/{problemId}/testCases")
@@ -59,10 +82,17 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getTestCasesByProblemId(problemId));
     }
 
+    @GetMapping("/{problemId}/testCases/all")
+    public ResponseEntity<List<TestCaseResponse>> getAllTestCasesByProblem(@PathVariable UUID problemId) {
+        return ResponseEntity.ok(problemService.getAllByProblemId(problemId));
+    }
     @PostMapping("/{problemId}/testCase")
+    @Role("ADMIN")
     public ResponseEntity<Boolean> createTestCase(@RequestBody TestCaseRequest request) {
         return ResponseEntity.ok(problemService.createTestCase(request));
     }
+
+
 
 
 }

@@ -124,7 +124,7 @@ public class UserProblemEngagementServiceImpl implements UserProblemEngagementSe
                 .problem(snapshot)
                 .liked(false)
                 .saved(false)
-                .solveStatus(SolveStatus.UNSOLVED)
+                .solveStatus(SolveStatus.TODO)
                 .build();
 
         return mapToResponse(engagementRepository.save(engagement));

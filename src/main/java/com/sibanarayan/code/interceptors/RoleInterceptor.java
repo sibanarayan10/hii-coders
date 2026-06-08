@@ -1,9 +1,14 @@
-package com.example.security;
+package com.sibanarayan.code.interceptors;
 
 import com.sibanarayan.code.customAnnotation.Role;
+import com.sibanarayan.code.config.JwtFilter;
+import com.sibanarayan.code.utility.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -11,7 +16,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.lang.reflect.Method;
 
 @Component
+@AllArgsConstructor
 public class RoleInterceptor implements HandlerInterceptor {
+
 
     @Override
     public boolean preHandle(
@@ -36,10 +43,11 @@ public class RoleInterceptor implements HandlerInterceptor {
 
         String requiredRole = requireRole.value();
 
-        String userRole = request.getHeader("ROLE");
 
-        // Check role
-        if (requiredRole.equals(userRole)) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + requireRole.value()))) {
             return true;
         }
 

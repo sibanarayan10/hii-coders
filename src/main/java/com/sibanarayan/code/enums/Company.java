@@ -1,0 +1,32 @@
+package com.sibanarayan.code.enums;
+
+public enum Company {
+    GOOGLE,
+    MICROSOFT,
+    AMAZON,
+    META,
+    APPLE,
+    NETFLIX,
+    UBER,
+    ADOBE,
+    ORACLE,
+    IBM,
+    SALESFORCE,
+    LINKEDIN,
+    TWITTER,
+    SPOTIFY,
+    AIRBNB,
+    DROPBOX,
+    PAYPAL,
+    NVIDIA,
+    INTEL,
+    SAMSUNG,
+    TIKTOK,
+    ZOHO,
+    FLIPKART,
+    SWIGGY,
+    ZOMATO,
+    PHONEPE,
+    RAZORPAY,
+    PAYTM
+}

@@ -1,5 +1,6 @@
 package com.sibanarayan.code.utility;
 
+import com.sibanarayan.code.enums.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,12 +29,13 @@ public class JwtUtility {
     }
 
     // Generate token
-    public String generateToken(String email, UUID userId) {
+    public String generateToken(String email, UUID userId, UserRole role) {
         Instant now = Instant.now();
 
         return Jwts.builder()
                 .setSubject(email)
                 .claim("userId", userId)
+                .claim("ROLE",role.name())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusMillis(expiration)))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -43,6 +45,10 @@ public class JwtUtility {
     // Extract email
     public String getEmail(String token) {
         return getClaims(token).getSubject();
+    }
+
+    public  String getRole(String token){
+        return getClaims(token).get("ROLE",String.class);
     }
 
     // Extract userId
