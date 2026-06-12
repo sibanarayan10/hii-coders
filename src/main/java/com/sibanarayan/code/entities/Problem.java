@@ -69,4 +69,7 @@ public class Problem extends Base {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<ProgrammingLanguage,String> ioByLanguage=new HashMap<>();
 
+    @Column(name="order_no")
+    private Integer order;
+
 }

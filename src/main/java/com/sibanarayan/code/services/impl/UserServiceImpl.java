@@ -5,16 +5,14 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sibanarayan.code.entities.QProblem;
-import com.sibanarayan.code.entities.QSubmissionResultSnapshot;
-import com.sibanarayan.code.entities.QUser;
-import com.sibanarayan.code.entities.User;
+import com.sibanarayan.code.entities.*;
 import com.sibanarayan.code.enums.*;
 import com.sibanarayan.code.events.UserEvent;
 import com.sibanarayan.code.exceptions.EntityAlreadyExistException;
 import com.sibanarayan.code.models.request.CreateUserRequest;
 import com.sibanarayan.code.models.request.LoginRequest;
 import com.sibanarayan.code.models.response.*;
+import com.sibanarayan.code.repository.PendingLinkRepository;
 import com.sibanarayan.code.repository.UserRepository;
 import com.sibanarayan.code.services.SubmissionResultSnapshotService;
 import com.sibanarayan.code.services.UserService;
@@ -25,7 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,10 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,40 +48,94 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
     private final JwtUtility jwtUtility;
     private final KafkaTemplate<String, UserEvent> kafkaTemplate;
     private final JPAQueryFactory queryFactory;
+    private final PendingLinkRepository pendingLinkRepository;
+    private final EmailService emailService;
 
     private final  String TOPIC="user.event";
 
-    public boolean createUser(CreateUserRequest request){
-        userRepository
-                .findByEmail(request.getEmail())
-                .ifPresent(user -> {
-                    throw new EntityAlreadyExistException(
-                            "User with this email already exists"
-                    );
-                });
+    public User createUser(CreateUserRequest request){
+        Optional<User> userContainer = userRepository.findByEmail(request.getEmail());
+        User existingUser = userContainer.orElse(null);
 
-        String encodedPw= passwordEncoder.encode(request.getPassword());
+        User user = switch (request.getUserDetailProvider()) {
+            case GITHUB, GOOGLE -> handleExternalAuth(userContainer.isPresent(), existingUser, request);
+            case MANUAL -> handleInternalAuth(userContainer.isPresent(), existingUser, request);
+        };
 
-        User user=User.builder().
-                name(request.getName()).
-                email(request.getEmail()).
-                role(request.getRole()).
-                password(encodedPw).build();
-
-        if(request.getPhone()!=null){
-            user.setPhone(request.getPhone().toString());
+        if (user != null) {
+            log.info("User created/updated successfully: {}", user.getEmail());
+            publishEvent(user.getId(), user.getEmail(), user.getName(), EventType.CREATE);
+        } else {
+            log.info("Verification email sent to: {}", request.getEmail());
         }
 
-        if(request.getRole()==null){
-            user.setRole(UserRole.USER);
-        }
-
-        userRepository.save(user);
-        log.info("A new user created successfully");
-
-        publishEvent(user.getId(),user.getEmail(),user.getName(),EventType.CREATE);
-        return true;
+        return userContainer.isPresent()?existingUser:user;
     }
+
+    private User handleExternalAuth(boolean userExist,User user,CreateUserRequest request){
+        User newUser=user;
+        boolean changed=false;
+
+        if(userExist && !user.getUserDetailProvider().contains(request.getUserDetailProvider())){
+            newUser.getUserDetailProvider().add(request.getUserDetailProvider());
+            changed=true;
+        }else if(!userExist){
+            Set<UserDetailProvider> providers=new HashSet<>();
+            providers.add(request.getUserDetailProvider());
+
+            newUser=User.builder().
+                    name(request.getName()).
+                    email(request.getEmail()).
+                    role(request.getRole()).
+                    userDetailProvider(providers).build();
+            changed=true;
+
+        }
+        if(changed) userRepository.save(newUser);
+
+        return newUser;
+    }
+
+    private User handleInternalAuth(boolean userExist, User user, CreateUserRequest request){
+
+        String encodedPw = passwordEncoder.encode(request.getPassword());
+
+        if(userExist && !user.getUserDetailProvider().contains(UserDetailProvider.MANUAL)){
+            String token = UUID.randomUUID().toString();
+            PendingLink pendingLink = new PendingLink();
+            pendingLink.setEmail(request.getEmail());
+            pendingLink.setPassword(encodedPw);
+            pendingLink.setToken(token);
+            pendingLink.setExpiresAt(LocalDateTime.now().plusHours(24));
+            pendingLinkRepository.save(pendingLink);
+            emailService.sendLinkingEmail(request.getEmail(),user.getName(), token);
+            return null;
+        }
+
+        if(userExist && user.getUserDetailProvider().contains(UserDetailProvider.MANUAL)){
+            throw new EntityAlreadyExistException("Email already registered. Please login.");
+        }
+
+        Set<UserDetailProvider> providers = new HashSet<>();
+
+        providers.add(request.getUserDetailProvider());
+
+        User newUser = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .role(request.getRole())
+                .password(encodedPw)
+                .phone(request.getPhone().toString())
+                .userDetailProvider(providers)
+                .build();
+
+        userRepository.save(newUser);
+
+        return newUser;
+
+    }
+
+
     public UserResponse loginUser(LoginRequest request, HttpServletResponse response){
         String email= request.getEmail();
         Optional<User> optUser=userRepository.findByEmail(email);
@@ -231,6 +283,38 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
                .totalUsers(response.get(user.countDistinct()))
                .activeUsers(response.get(activeUserCount))
                .build();
+
+    }
+
+    public ResponseEntity<String> resetPassword(String password, String token){
+
+        if(token.isEmpty() || password.isEmpty()){
+            return  ResponseEntity.badRequest().body("Invalid request !");
+        }
+
+        Optional<PendingLink> linkContainer = pendingLinkRepository.findByToken(token);
+        if (linkContainer.isEmpty()) {
+            return ResponseEntity.badRequest().body("Invalid link");
+        }
+        PendingLink pendingLink=linkContainer.get();
+        String email=pendingLink.getEmail();
+
+        if (pendingLink.getExpiresAt().isBefore(LocalDateTime.now())) {
+            pendingLinkRepository.delete(pendingLink);
+            return ResponseEntity.badRequest().body("Link expired. Please try again.");
+        }
+
+       Optional<User> userContainer= userRepository.findByEmail(email);
+        if(userContainer.isPresent()){
+            User user=userContainer.get();
+            String encodedPassword=passwordEncoder.encode(password);
+            user.setPassword(encodedPassword);
+            userRepository.save(user);
+            pendingLinkRepository.delete(pendingLink);
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body("Password changed successfully");
+        }
+
+        return ResponseEntity.badRequest().body("User not found with given credentials");
 
     }
 

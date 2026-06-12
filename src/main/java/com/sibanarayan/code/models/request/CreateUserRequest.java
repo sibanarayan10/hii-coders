@@ -1,5 +1,6 @@
 package com.sibanarayan.code.models.request;
 
+import com.sibanarayan.code.enums.UserDetailProvider;
 import com.sibanarayan.code.enums.UserRole;
 import lombok.*;
 
@@ -16,5 +17,6 @@ public class CreateUserRequest {
     private String name;
     private Long phone;
     private String password;
-    private UserRole role;
+    private UserRole role=UserRole.USER;
+    private UserDetailProvider userDetailProvider=UserDetailProvider.MANUAL;
 }

@@ -119,6 +119,9 @@ public class ProblemServiceImpl implements ProblemService {
                     )
             );
         }
+        if(!filter.getSearch().isEmpty()){
+            builder.and(problem.title.containsIgnoreCase(filter .getSearch()));
+        }
 
         if (filter.getDifficulties() != null &&
                 !filter.getDifficulties().isEmpty()) {

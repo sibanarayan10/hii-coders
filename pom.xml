@@ -37,6 +37,15 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+		<!-- Spring Boot Mail Starter (includes JavaMailSender) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
@@ -162,9 +171,7 @@
 				<includes>
 					<include>**/*</include>  <!-- restore default behaviour -->
 				</includes>
-				<excludes>
-					<exclude>db/migration/**</exclude>
-				</excludes>
+
 			</resource>
 		</resources>
 	</build>
