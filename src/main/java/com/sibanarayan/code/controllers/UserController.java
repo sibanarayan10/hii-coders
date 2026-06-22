@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -115,7 +116,8 @@ public class UserController {
                 .build();
     }
     @PostMapping("/api/v1/users/auth/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody String password,@RequestParam String token){
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body, @RequestParam String token){
+        String password=body.get("password");
         return userService.resetPassword(password,token);
     }
 

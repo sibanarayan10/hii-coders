@@ -294,7 +294,7 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
 
         Optional<PendingLink> linkContainer = pendingLinkRepository.findByToken(token);
         if (linkContainer.isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid link");
+            return ResponseEntity.badRequest().body("Link expired !!");
         }
         PendingLink pendingLink=linkContainer.get();
         String email=pendingLink.getEmail();
