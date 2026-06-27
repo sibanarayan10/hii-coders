@@ -1,6 +1,6 @@
 package com.sibanarayan.code.config;
 
-import com.sibanarayan.code.events.SubmissionResultEvent;
+import com.sibanarayan.shared_package.events.SubmissionResultEvent;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

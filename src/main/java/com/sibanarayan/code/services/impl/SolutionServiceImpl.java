@@ -2,12 +2,12 @@ package com.sibanarayan.code.services.impl;
 
 import com.sibanarayan.code.entities.Problem;
 import com.sibanarayan.code.entities.Solution;
-import com.sibanarayan.code.enums.ProgrammingLanguage;
-import com.sibanarayan.code.enums.RecordStatus;
 import com.sibanarayan.code.models.request.SolutionRequest;
 import com.sibanarayan.code.repository.ProblemRepository;
 import com.sibanarayan.code.repository.SolutionRepository;
 import com.sibanarayan.code.services.SolutionService;
+import com.sibanarayan.shared_package.enums.ProgrammingLanguage;
+import com.sibanarayan.shared_package.enums.RecordStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +20,7 @@ public class SolutionServiceImpl implements SolutionService {
     private final SolutionRepository solutionRepository;
     private final ProblemRepository problemRepository;
 
-    public String getSolution(ProgrammingLanguage language, UUID userId,UUID problemId){
+    public String getSolution(ProgrammingLanguage language, UUID userId, UUID problemId){
         StringBuilder builder=new StringBuilder();
         solutionRepository.findByUserIdAndProblemIdAndLanguage(userId,problemId,language).ifPresentOrElse((sol)->{
             builder.append(sol.getSolution());

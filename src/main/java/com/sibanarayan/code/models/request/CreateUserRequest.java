@@ -1,7 +1,7 @@
 package com.sibanarayan.code.models.request;
 
 import com.sibanarayan.code.enums.UserDetailProvider;
-import com.sibanarayan.code.enums.UserRole;
+import com.sibanarayan.shared_package.enums.UserRole;
 import lombok.*;
 
 import java.util.UUID;

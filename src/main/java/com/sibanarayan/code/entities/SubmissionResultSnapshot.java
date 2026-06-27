@@ -1,6 +1,6 @@
 package com.sibanarayan.code.entities;
 
-import com.sibanarayan.code.enums.SubmissionStatus;
+import com.sibanarayan.shared_package.enums.SubmissionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

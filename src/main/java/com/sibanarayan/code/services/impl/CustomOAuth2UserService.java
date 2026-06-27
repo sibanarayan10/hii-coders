@@ -2,20 +2,17 @@ package com.sibanarayan.code.services.impl;
 
 import com.sibanarayan.code.entities.User;
 import com.sibanarayan.code.enums.UserDetailProvider;
-import com.sibanarayan.code.enums.UserRole;
 import com.sibanarayan.code.models.request.CreateUserRequest;
 import com.sibanarayan.code.repository.UserRepository;
 import com.sibanarayan.code.services.UserService;
 import com.sibanarayan.code.utility.CustomOAuthUser;
+import com.sibanarayan.shared_package.enums.UserRole;
 import lombok.AllArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor

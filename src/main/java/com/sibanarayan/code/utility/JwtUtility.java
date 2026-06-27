@@ -1,6 +1,6 @@
 package com.sibanarayan.code.utility;
 
-import com.sibanarayan.code.enums.UserRole;
+import com.sibanarayan.shared_package.enums.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.context.SecurityContextHolder;

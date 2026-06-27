@@ -30,6 +30,12 @@
 		<java.version>21</java.version>
 		<tomcat.version>10.1.54</tomcat.version>
 	</properties>
+	<repositories>
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/sibanarayan10/shared-package</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -131,6 +137,11 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sibanarayan</groupId>
+			<artifactId>shared-package</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 	</dependencies>
 

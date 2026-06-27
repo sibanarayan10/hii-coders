@@ -1,7 +1,7 @@
 package com.sibanarayan.code.models.response;
 
-import com.sibanarayan.code.enums.RecordStatus;
-import com.sibanarayan.code.enums.UserRole;
+import com.sibanarayan.shared_package.enums.RecordStatus;
+import com.sibanarayan.shared_package.enums.UserRole;
 import lombok.*;
 
 import java.time.Instant;

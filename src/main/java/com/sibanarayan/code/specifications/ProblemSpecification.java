@@ -3,6 +3,7 @@ package com.sibanarayan.code.specifications;
 import com.sibanarayan.code.entities.Problem;
 import com.sibanarayan.code.enums.*;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
+import com.sibanarayan.shared_package.enums.RecordStatus;
 import jakarta.persistence.criteria.Join;
 import org.springframework.data.jpa.domain.Specification;
 

@@ -4,6 +4,7 @@ import com.sibanarayan.code.entities.Problem;
 import com.sibanarayan.code.enums.*;
 import com.sibanarayan.code.models.response.ProblemResponse;
 import com.sibanarayan.code.models.response.ProblemUserEngagementResponse;
+import com.sibanarayan.shared_package.enums.RecordStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -2,9 +2,8 @@ package com.sibanarayan.code.models.response;
 
 import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.enums.ProblemsCategory;
-import com.sibanarayan.code.enums.SubmissionStatus;
+import com.sibanarayan.shared_package.enums.SubmissionStatus;
 import lombok.Builder;
-import lombok.Generated;
 import lombok.Getter;
 import lombok.Setter;
 

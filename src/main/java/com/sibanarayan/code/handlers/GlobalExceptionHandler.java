@@ -1,9 +1,10 @@
 package com.sibanarayan.code.handlers;
 
 
-import com.sibanarayan.code.exceptions.EntityAlreadyExistException;
-import com.sibanarayan.code.exceptions.ResourceNotFoundException;
+
 import com.sibanarayan.code.exceptions.UnauthorizedException;
+import com.sibanarayan.shared_package.exceptions.EntityAlreadyExistException;
+import com.sibanarayan.shared_package.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

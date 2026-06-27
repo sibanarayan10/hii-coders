@@ -7,9 +7,7 @@ import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sibanarayan.code.entities.*;
 import com.sibanarayan.code.enums.*;
-import com.sibanarayan.code.events.ProblemEvent;
-import com.sibanarayan.code.exceptions.EntityAlreadyExistException;
-import com.sibanarayan.code.exceptions.ResourceNotFoundException;
+
 import com.sibanarayan.code.models.request.AdminProblemPageFilter;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
@@ -22,6 +20,12 @@ import com.sibanarayan.code.repository.ProblemRepository;
 import com.sibanarayan.code.repository.TestCaseRepository;
 import com.sibanarayan.code.services.ProblemService;
 import com.sibanarayan.code.specifications.ProblemSpecification;
+import com.sibanarayan.shared_package.enums.EventType;
+import com.sibanarayan.shared_package.enums.ProgrammingLanguage;
+import com.sibanarayan.shared_package.enums.RecordStatus;
+import com.sibanarayan.shared_package.events.ProblemEvent;
+import com.sibanarayan.shared_package.exceptions.ResourceNotFoundException;
+import com.sibanarayan.shared_package.enums.SubmissionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -232,12 +236,12 @@ public class ProblemServiceImpl implements ProblemService {
             order = filter.getSortBy().equals("createdAt") ? problem.createdAt.desc() : problem.difficulty.desc();
         }
 
+
         NumberExpression<Integer> acceptedCount = submissionResultSnapshot.status
                 .when(SubmissionStatus.ACCEPTED)
                 .then(1)
                 .otherwise(0)
                 .sum();
-
 
         List<Tuple> list = queryFactory
                 .select(problem, submissionResultSnapshot.countDistinct(), acceptedCount)

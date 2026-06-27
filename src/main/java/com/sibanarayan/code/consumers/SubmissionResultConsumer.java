@@ -1,9 +1,10 @@
 package com.sibanarayan.code.consumers;
 
 import com.sibanarayan.code.entities.SubmissionResultSnapshot;
-import com.sibanarayan.code.events.SubmissionResultEvent;
-import com.sibanarayan.code.exceptions.EntityAlreadyExistException;
+
 import com.sibanarayan.code.repository.SubmissionResultSnapshotRepository;
+import com.sibanarayan.shared_package.events.SubmissionResultEvent;
+import com.sibanarayan.shared_package.exceptions.EntityAlreadyExistException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

@@ -1,7 +1,7 @@
 package com.sibanarayan.code.repository;
 
 import com.sibanarayan.code.entities.Solution;
-import com.sibanarayan.code.enums.ProgrammingLanguage;
+import com.sibanarayan.shared_package.enums.ProgrammingLanguage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

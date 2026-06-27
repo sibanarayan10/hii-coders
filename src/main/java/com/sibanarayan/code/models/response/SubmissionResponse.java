@@ -1,11 +1,10 @@
 package com.sibanarayan.code.models.response;
 
 import com.sibanarayan.code.enums.ProblemDifficulty;
-import com.sibanarayan.code.enums.SubmissionStatus;
+import com.sibanarayan.shared_package.enums.SubmissionStatus;
 import lombok.*;
 
 import java.time.Instant;
-import java.util.UUID;
 
 
 @Getter

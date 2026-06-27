@@ -1,11 +1,11 @@
 package com.sibanarayan.code.services;
 
 import com.sibanarayan.code.entities.User;
-import com.sibanarayan.code.enums.RecordStatus;
 import com.sibanarayan.code.models.request.CreateUserRequest;
 import com.sibanarayan.code.models.request.LoginRequest;
 import com.sibanarayan.code.models.response.UserMetrics;
 import com.sibanarayan.code.models.response.UserResponse;
+import com.sibanarayan.shared_package.enums.RecordStatus;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
