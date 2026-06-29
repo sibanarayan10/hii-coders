@@ -22,7 +22,7 @@ public class SubmissionResultConsumer {
 
     @KafkaListener(
             topics = "submission.result",
-            groupId = "submission.result",
+            groupId = "submission-result",
             containerFactory = "submissionEventFactory"
     )
     public void consume(SubmissionResultEvent event){
