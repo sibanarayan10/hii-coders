@@ -16,6 +16,6 @@ spring:
       fetch-max-wait: 500ms
       enable-auto-commit: false
       properties:
-        spring.json.trusted.packages: "com.sibanarayan.code.events"
+        spring.json.trusted.packages: "com.sibanarayan.*"
     listener:
       ack-mode: RECORD
