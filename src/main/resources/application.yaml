@@ -33,6 +33,9 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
   jpa:
     hibernate:
       ddl-auto: validate
@@ -46,3 +49,11 @@ spring:
     allowed-origins: ${ALLOWED_ORIGIN}
 server:
   port: 8083
+  tomcat:
+    threads:
+      max: 50
+      min-spare: 10
+    accept-count: 50
+    max-connections: 200
+  servlet:
+    register-default-servlet: false
