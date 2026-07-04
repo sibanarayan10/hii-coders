@@ -44,7 +44,7 @@ public class RoleInterceptor implements HandlerInterceptor {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_" + requireRole.value()))) {
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + requiredRole))) {
             return true;
         }
 

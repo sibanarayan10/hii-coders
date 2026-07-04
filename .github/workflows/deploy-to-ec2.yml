@@ -59,6 +59,7 @@ jobs:
               -e KAFKA_API_SECRET="${{ secrets.KAFKA_API_SECRET }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               -e JWT_EXPIRATION="${{ secrets.JWT_EXPIRATION }}" \
+              -e COOKIE_DOMAIN="${{ secrets.COOKIE_DOMAIN }}" \
               "$IMAGE"
 
             echo "Cleaning up old dangling images..."
