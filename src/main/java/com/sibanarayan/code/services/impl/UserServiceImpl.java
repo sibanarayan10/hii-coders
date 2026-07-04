@@ -161,8 +161,9 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
         String token = jwtUtility.generateToken(email,user.getId(),user.getRole());
         ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
+                .domain(".hiicoders.xyz")
                 .path("/")
                 .maxAge(60 * 60)
                 .build();
