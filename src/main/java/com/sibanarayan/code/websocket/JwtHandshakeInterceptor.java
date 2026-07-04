@@ -14,12 +14,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Runs during the HTTP → WebSocket upgrade handshake.
- * Extracts the JWT from the AUTH_TOKEN cookie, validates it,
- * and stashes userId + email in the session attributes so the
- * presence tracker can identify who just connected.
- */
+
 @Component
 @AllArgsConstructor
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {

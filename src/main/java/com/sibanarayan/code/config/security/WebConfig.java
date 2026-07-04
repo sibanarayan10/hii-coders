@@ -1,4 +1,4 @@
-package com.sibanarayan.code.config;
+package com.sibanarayan.code.config.security;
 
 import com.sibanarayan.code.interceptors.RoleInterceptor;
 import lombok.AllArgsConstructor;

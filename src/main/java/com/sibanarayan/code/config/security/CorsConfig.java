@@ -1,4 +1,4 @@
-package com.sibanarayan.code.config;
+package com.sibanarayan.code.config.security;
 
 
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +22,9 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(
-                Arrays.asList(allowedOrigins.split(","))
+                Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .toList()
         );
 
         config.setAllowedMethods(

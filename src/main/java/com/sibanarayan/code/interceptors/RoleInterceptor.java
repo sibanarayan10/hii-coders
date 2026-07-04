@@ -1,13 +1,10 @@
 package com.sibanarayan.code.interceptors;
 
 import com.sibanarayan.code.customAnnotation.Role;
-import com.sibanarayan.code.config.JwtFilter;
-import com.sibanarayan.code.utility.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;

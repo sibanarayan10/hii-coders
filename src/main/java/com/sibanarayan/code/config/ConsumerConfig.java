@@ -24,13 +24,13 @@ public class ConsumerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    @Value("${spring.kafka.properties.security.protocol}")
+    @Value("${spring.kafka.properties.security.protocol:}")
     private String securityProtocol;
 
-    @Value("${spring.kafka.properties.sasl.mechanism}")
+    @Value("${spring.kafka.properties.sasl.mechanism:}")
     private String saslMechanism;
 
-    @Value("${spring.kafka.properties.sasl.jaas.config}")
+    @Value("${spring.kafka.properties.sasl.jaas.config:}")
     private String saslJaasConfig;
 
     @Autowired

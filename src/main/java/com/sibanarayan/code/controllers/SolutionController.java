@@ -1,6 +1,6 @@
 package com.sibanarayan.code.controllers;
 
-import com.sibanarayan.code.config.JwtFilter;
+import com.sibanarayan.code.config.security.JwtFilterConfig;
 import com.sibanarayan.code.models.request.SolutionRequest;
 import com.sibanarayan.code.services.SolutionService;
 import com.sibanarayan.code.utility.JwtUtility;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class SolutionController {
     private final SolutionService solutionService;
-    private final JwtFilter filter;
+    private final JwtFilterConfig filter;
     private  final JwtUtility utility;
 
     @PostMapping

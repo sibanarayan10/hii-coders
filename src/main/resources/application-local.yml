@@ -19,3 +19,15 @@ spring:
         spring.json.trusted.packages: "com.sibanarayan.*"
     listener:
       ack-mode: RECORD
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-dev-only-secret-do-not-use-in-prod-9f8a7b6c5d}
+    expiration: ${JWT_EXPIRATION:3600000}
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}
+  backend:
+    url: ${BACKEND_URL:http://localhost:8083}
+  cookie:
+    secure: false
+    same-site: Lax
+    domain: ${COOKIE_DOMAIN:}

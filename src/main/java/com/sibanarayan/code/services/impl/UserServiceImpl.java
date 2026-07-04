@@ -14,6 +14,7 @@ import com.sibanarayan.code.repository.PendingLinkRepository;
 import com.sibanarayan.code.repository.UserRepository;
 import com.sibanarayan.code.services.SubmissionResultSnapshotService;
 import com.sibanarayan.code.services.UserService;
+import com.sibanarayan.code.utility.CookieUtility;
 import com.sibanarayan.code.utility.JwtUtility;
 import com.sibanarayan.shared_package.enums.EventType;
 import com.sibanarayan.shared_package.enums.RecordStatus;
@@ -52,7 +53,8 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
     private final KafkaTemplate<String, UserEvent> kafkaTemplate;
     private final JPAQueryFactory queryFactory;
     private final PendingLinkRepository pendingLinkRepository;
-    private final EmailService emailService;
+    private final EmailServiceImpl emailServiceImpl;
+    private final CookieUtility cookieUtility;
 
     private final  String TOPIC="user.event";
 
@@ -111,7 +113,7 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
             pendingLink.setToken(token);
             pendingLink.setExpiresAt(LocalDateTime.now().plusHours(24));
             pendingLinkRepository.save(pendingLink);
-            emailService.sendLinkingEmail(request.getEmail(),user.getName(), token);
+            emailServiceImpl.sendLinkingEmail(request.getEmail(),user.getName(), token);
             return null;
         }
 
@@ -159,14 +161,7 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
         }
 
         String token = jwtUtility.generateToken(email,user.getId(),user.getRole());
-        ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", token)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .domain(".hiicoders.xyz")
-                .path("/")
-                .maxAge(60 * 60)
-                .build();
+        ResponseCookie cookie = cookieUtility.buildAuthCookie(token);
 
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

@@ -8,20 +8,23 @@ import com.sibanarayan.code.enums.UserDetailProvider;
 import com.sibanarayan.code.models.request.CreateUserRequest;
 import com.sibanarayan.code.models.request.LoginRequest;
 import com.sibanarayan.code.models.response.*;
-import com.sibanarayan.code.config.JwtFilter;
+import com.sibanarayan.code.config.security.JwtFilterConfig;
 import com.sibanarayan.code.repository.PendingLinkRepository;
 import com.sibanarayan.code.repository.UserRepository;
 import com.sibanarayan.code.services.SubmissionResultSnapshotService;
 import com.sibanarayan.code.services.UserService;
-import com.sibanarayan.code.services.impl.EmailService;
+import com.sibanarayan.code.services.impl.EmailServiceImpl;
+import com.sibanarayan.code.utility.CookieUtility;
 import com.sibanarayan.code.utility.JwtUtility;
 import com.sibanarayan.shared_package.enums.RecordStatus;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,19 +41,23 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtility jwtUtility;
-    private final JwtFilter jwtFilter;
+    private final JwtFilterConfig jwtFilterConfig;
     private final SubmissionResultSnapshotService submissionResultSnapshotService;
     private final PendingLinkRepository pendingLinkRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
+    private final EmailServiceImpl emailServiceImpl;
+    private final CookieUtility cookieUtility;
 
-    @PostMapping("/api/v1/users/sign-up")
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
+    @PostMapping("/api/v1/user/auth/sign-up")
     private ResponseEntity<?> register(@RequestBody CreateUserRequest userRequest){
         userService.createUser(userRequest);
         return ResponseEntity.status(201).body("User registered successfully");
     }
 
-    @PostMapping("/api/v1/users/sign-in")
+    @PostMapping("/api/v1/user/auth/sign-in")
     public ResponseEntity<UserResponse> login(
             @RequestBody LoginRequest request,
             HttpServletResponse response
@@ -58,26 +65,20 @@ public class UserController {
         UserResponse result=userService.loginUser(request,response);
        return new ResponseEntity<UserResponse>(result, HttpStatus.ACCEPTED);
     }
-    @GetMapping("/api/v1/users/me")
+    @GetMapping("/api/v1/user/me")
     public ResponseEntity<UserResponse> getMe(
             HttpServletRequest request
     ) {
-        String token=jwtFilter.extractTokenFromCookie(request);
+        String token= jwtFilterConfig.extractTokenFromCookie(request);
         String email= jwtUtility.getEmail(token);
         UserResponse result=userService.getMe(email);
         return new ResponseEntity<UserResponse>(result, HttpStatus.ACCEPTED);
     }
 
-    @PostMapping("/api/v1/users/log-out")
+    @PostMapping("/api/v1/user/log-out")
     public ResponseEntity<Boolean>logout(HttpServletResponse response){
-
-        Cookie cookie = new Cookie("AUTH_TOKEN", null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-
-        response.addCookie(cookie);
+        ResponseCookie cookie = cookieUtility.clearAuthCookie();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok(true);
     }
@@ -112,16 +113,16 @@ public class UserController {
         pendingLinkRepository.delete(pendingLink);
 
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create("http://localhost:5173/sign-in"))
+                .location(URI.create(frontendUrl + "/auth/sign-in"))
                 .build();
     }
-    @PostMapping("/api/v1/users/auth/reset-password")
+    @PostMapping("/api/v1/user/auth/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body, @RequestParam String token){
         String password=body.get("password");
         return userService.resetPassword(password,token);
     }
 
-    @GetMapping("/api/v1/users/auth/forgot-password")
+    @GetMapping("/api/v1/user/auth/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
 
         User user = userRepository.findByEmail(email)
@@ -136,7 +137,7 @@ public class UserController {
         pendingLink.setExpiresAt(LocalDateTime.now().plusHours(1));
         pendingLinkRepository.save(pendingLink);
 
-        emailService.sendPasswordResetEmail(email, user.getName(), token);
+        emailServiceImpl.sendPasswordResetEmail(email, user.getName(), token);
 
         return ResponseEntity.ok("Check your email to reset your password.");
     }

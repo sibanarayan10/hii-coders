@@ -1,4 +1,4 @@
-package com.sibanarayan.code.config;
+package com.sibanarayan.code.config.security;
 
 import com.sibanarayan.code.utility.JwtUtility;
 import com.sibanarayan.code.utility.UserPrincipal;
@@ -21,11 +21,11 @@ import java.util.UUID;
 
 
 @Component
-    public class JwtFilter extends OncePerRequestFilter {
+    public class JwtFilterConfig extends OncePerRequestFilter {
 
         private final JwtUtility jwtUtil;
 
-        public JwtFilter(JwtUtility jwtUtil) {
+        public JwtFilterConfig(JwtUtility jwtUtil) {
             this.jwtUtil = jwtUtil;
         }
 

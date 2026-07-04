@@ -57,3 +57,15 @@ server:
     max-connections: 200
   servlet:
     register-default-servlet: false
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION}
+  frontend:
+    url: ${FRONTEND_URL}
+  backend:
+    url: ${BACKEND_URL}
+  cookie:
+    secure: true
+    same-site: None
+    domain: ${COOKIE_DOMAIN}

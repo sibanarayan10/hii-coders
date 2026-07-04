@@ -3,6 +3,7 @@ package com.sibanarayan.code.utility;
 import com.sibanarayan.shared_package.enums.UserRole;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import java.security.Key;
@@ -16,16 +17,23 @@ public class JwtUtility {
     private final Key key;
     private final long expiration;
 
-    public JwtUtility() {
-        String secret = System.getenv("JWT_SECRET");
-        String exp = System.getenv("JWT_EXPIRATION");
-
-        if (secret == null || exp == null) {
-            throw new IllegalStateException("JWT environment variables not set");
+    public JwtUtility(
+            @Value("${app.jwt.secret}") String secret,
+            @Value("${app.jwt.expiration}") long expiration
+    ) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT secret is not set");
+        }
+        if (secret.getBytes().length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 32 characters/bytes long");
         }
 
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        this.expiration = Long.parseLong(exp);
+        this.expiration = expiration;
+    }
+
+    public long getExpirationMillis() {
+        return expiration;
     }
 
     // Generate token
@@ -80,8 +88,6 @@ public class JwtUtility {
                 .build()
                 .parseClaimsJws(token);
     }
-
-
 
     private Claims getClaims(String token) {
         return parseToken(token).getBody();

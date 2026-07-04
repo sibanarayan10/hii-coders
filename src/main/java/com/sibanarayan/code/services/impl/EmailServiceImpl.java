@@ -3,21 +3,25 @@ package com.sibanarayan.code.services.impl;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService {
+public class EmailServiceImpl {
 
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+
+    @Value("${app.backend.url}")
+    private String backendUrl;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     // Linking email (manual signup conflict)
     public void sendLinkingEmail(String toEmail, String name, String token) {
@@ -57,7 +61,7 @@ public class EmailService {
 
 
     private String buildLinkingEmailTemplate(String name, String token) {
-        String link = "http://localhost:8083/api/v1/user/auth/link-account?token=" + token;
+        String link = backendUrl + "/api/v1/user/auth/link-account?token=" + token;
 
         return """
         <!DOCTYPE html>
@@ -132,7 +136,7 @@ public class EmailService {
         """.formatted(name, link);
     }
     private String buildPasswordResetTemplate(String name, String token) {
-        String link = "http://localhost:5173/auth/reset-password?token=" + token;
+        String link = frontendUrl + "/auth/reset-password?token=" + token;
 
         return """
         <!DOCTYPE html>

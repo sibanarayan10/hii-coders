@@ -3,7 +3,6 @@ package com.sibanarayan.code.services.impl;
 import com.sibanarayan.code.entities.User;
 import com.sibanarayan.code.enums.UserDetailProvider;
 import com.sibanarayan.code.models.request.CreateUserRequest;
-import com.sibanarayan.code.repository.UserRepository;
 import com.sibanarayan.code.services.UserService;
 import com.sibanarayan.code.utility.CustomOAuthUser;
 import com.sibanarayan.shared_package.enums.UserRole;
@@ -17,11 +16,10 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 
-public class CustomOAuth2UserService
+public class CustomOAuth2UserServiceImpl
         extends DefaultOAuth2UserService {
 
     private final UserService userService;
-    private final UserRepository userRepository;
 
 
     @Override
