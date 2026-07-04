@@ -57,8 +57,8 @@ jobs:
               -e KAFKA_BROKER="${{ secrets.KAFKA_BROKER }}" \
               -e KAFKA_API_KEY="${{ secrets.KAFKA_API_KEY }}" \
               -e KAFKA_API_SECRET="${{ secrets.KAFKA_API_SECRET }}" \
-              -e JWT_SECRET="${{9f8c7d6a5b4e3c2d1a0f9e8d7c6b5a4e3d2c1b0a9f8e7d6c5b4a3f2e1d}}" \
-              -e JWT_EXPIRATION="${{3600000}}"
+              -e JWT_SECRET="${{secrets.JWT_SECRET}}" \
+              -e JWT_EXPIRATION="${{secrets.JWT_EXPIRATION}}"
               "$IMAGE"
 
             echo "Cleaning up old dangling images..."
