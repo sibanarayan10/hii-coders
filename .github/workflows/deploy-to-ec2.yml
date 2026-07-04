@@ -1,0 +1,65 @@
+name: Deploy to EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (e.g. latest, or a commit short-sha like a1b2c3d)'
+        required: true
+        default: 'latest'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  CONTAINER_NAME: hii-coders-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_SSH_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.image_tag }}"
+
+            echo "Logging in to GHCR..."
+            echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            echo "Pulling image: $IMAGE"
+            docker pull "$IMAGE"
+
+            echo "Stopping old container (if running)..."
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
+
+            echo "Starting new container..."
+            docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              --restart unless-stopped \
+              -p 8083:8083 \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -e DB_URL="${{ secrets.DB_URL }}" \
+              -e DB_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -e DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+              -e MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}" \
+              -e EMAIL_APP_PASSWORD="${{ secrets.EMAIL_APP_PASSWORD }}" \
+              -e GOOGLE_AUTH_CLIENT_ID="${{ secrets.GOOGLE_AUTH_CLIENT_ID }}" \
+              -e GOOGLE_AUTH_CLIENT_SECRET="${{ secrets.GOOGLE_AUTH_CLIENT_SECRET }}" \
+              -e GITHUB_AUTH_CLIENT_ID="${{ secrets.GIT_AUTH_CLIENT_ID }}" \
+              -e GITHUB_AUTH_CLIENT_SECRET="${{ secrets.GIT_AUTH_CLIENT_SECRET }}" \
+              -e ALLOWED_ORIGIN="${{ secrets.ALLOWED_ORIGIN }}" \
+              -e KAFKA_BROKER="${{ secrets.KAFKA_BROKER }}" \
+              -e KAFKA_API_KEY="${{ secrets.KAFKA_API_KEY }}" \
+              -e KAFKA_API_SECRET="${{ secrets.KAFKA_API_SECRET }}" \
+              "$IMAGE"
+
+            echo "Cleaning up old dangling images..."
+            docker image prune -f
+
+            echo "Deployed $IMAGE successfully."

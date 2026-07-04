@@ -27,7 +27,7 @@ COPY --from=builder /app/target/*.jar app.jar
 
 RUN chown app:app app.jar
 
-EXPOSE 8082
+EXPOSE 8083
 
 USER app
 
