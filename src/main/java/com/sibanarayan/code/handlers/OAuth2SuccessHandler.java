@@ -2,8 +2,8 @@ package com.sibanarayan.code.handlers;
 
 import com.sibanarayan.code.utility.CookieUtility;
 import com.sibanarayan.code.utility.CustomOAuthUser;
-import com.sibanarayan.code.utility.JwtUtility;
 import com.sibanarayan.shared_package.enums.UserRole;
+import com.sibanarayan.shared_package.security.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
