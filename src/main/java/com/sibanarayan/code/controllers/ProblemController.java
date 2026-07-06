@@ -9,9 +9,9 @@ import com.sibanarayan.code.models.response.AdminProblemResponse;
 import com.sibanarayan.code.models.response.ProblemResponse;
 import com.sibanarayan.code.models.response.ProblemUserEngagementResponse;
 import com.sibanarayan.code.models.response.TestCaseResponse;
-import com.sibanarayan.code.config.security.JwtFilterConfig;
 import com.sibanarayan.code.services.ProblemService;
-import com.sibanarayan.code.utility.JwtUtility;
+import com.sibanarayan.shared_package.security.JwtAuthFilter;
+import com.sibanarayan.shared_package.security.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,14 +31,14 @@ import java.util.UUID;
 public class ProblemController {
 
     private final ProblemService problemService;
-    private final JwtFilterConfig jwtFilterConfig;
+    private final JwtAuthFilter jwtAuthFilter;
     private final JwtUtility jwtUtility;
 
     @PostMapping
     @Role("ADMIN")
     public ResponseEntity<ProblemResponse> createProblem(HttpServletRequest request,
             @RequestBody @Valid CreateProblemRequest problemRequest) {
-        String token= jwtFilterConfig.extractTokenFromCookie(request);
+        String token= jwtUtility.extractTokenFromCookie(request);
         UUID adminId=jwtUtility.getUserId(token);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(problemService.createProblem(problemRequest, adminId));
@@ -47,7 +47,7 @@ public class ProblemController {
     @GetMapping
     public ResponseEntity<Page<ProblemResponse>> getProblems(
             @ModelAttribute ProblemFilterRequest filter,HttpServletRequest request) {
-        String token= jwtFilterConfig.extractTokenFromCookie(request);
+        String token= jwtUtility.extractTokenFromCookie(request);
         UUID userId=jwtUtility.getUserId(token);
         return ResponseEntity.ok(problemService.getProblems(filter,userId));
     }
@@ -60,7 +60,7 @@ public class ProblemController {
 
     @GetMapping("/{problemId}")
     public ResponseEntity<ProblemUserEngagementResponse> getProblemUserEngagementDetail(@PathVariable UUID problemId, HttpServletRequest request) {
-        String token= jwtFilterConfig.extractTokenFromCookie(request);
+        String token= jwtUtility.extractTokenFromCookie(request);
         UUID userId=jwtUtility.getUserId(token);
         return ResponseEntity.ok(problemService.getProblemUserEngagementDetail(problemId,userId));
     }

@@ -1,6 +1,6 @@
 package com.sibanarayan.code.websocket;
 
-import com.sibanarayan.code.utility.JwtUtility;
+import com.sibanarayan.shared_package.security.JwtUtility;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;

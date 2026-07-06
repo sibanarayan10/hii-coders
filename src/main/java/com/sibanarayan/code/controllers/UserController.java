@@ -8,15 +8,15 @@ import com.sibanarayan.code.enums.UserDetailProvider;
 import com.sibanarayan.code.models.request.CreateUserRequest;
 import com.sibanarayan.code.models.request.LoginRequest;
 import com.sibanarayan.code.models.response.*;
-import com.sibanarayan.code.config.security.JwtFilterConfig;
 import com.sibanarayan.code.repository.PendingLinkRepository;
 import com.sibanarayan.code.repository.UserRepository;
 import com.sibanarayan.code.services.SubmissionResultSnapshotService;
 import com.sibanarayan.code.services.UserService;
 import com.sibanarayan.code.services.impl.EmailServiceImpl;
 import com.sibanarayan.code.utility.CookieUtility;
-import com.sibanarayan.code.utility.JwtUtility;
 import com.sibanarayan.shared_package.enums.RecordStatus;
+import com.sibanarayan.shared_package.security.JwtAuthFilter;
+import com.sibanarayan.shared_package.security.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,6 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtility jwtUtility;
-    private final JwtFilterConfig jwtFilterConfig;
     private final SubmissionResultSnapshotService submissionResultSnapshotService;
     private final PendingLinkRepository pendingLinkRepository;
     private final UserRepository userRepository;
@@ -69,7 +68,7 @@ public class UserController {
     public ResponseEntity<UserResponse> getMe(
             HttpServletRequest request
     ) {
-        String token= jwtFilterConfig.extractTokenFromCookie(request);
+        String token= jwtUtility.extractTokenFromCookie(request);
         String email= jwtUtility.getEmail(token);
         UserResponse result=userService.getMe(email);
         return new ResponseEntity<UserResponse>(result, HttpStatus.ACCEPTED);
