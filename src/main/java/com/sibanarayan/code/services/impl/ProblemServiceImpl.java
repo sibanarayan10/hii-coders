@@ -8,24 +8,25 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sibanarayan.code.entities.*;
 import com.sibanarayan.code.enums.*;
 
-import com.sibanarayan.code.models.request.AdminProblemPageFilter;
+import com.sibanarayan.code.enums.ProblemDifficulty;
+import com.sibanarayan.code.enums.ProblemsCategory;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
 import com.sibanarayan.code.models.request.TestCaseRequest;
-import com.sibanarayan.code.models.response.AdminProblemResponse;
+import com.sibanarayan.code.models.response.BaseProblemResponse;
 import com.sibanarayan.code.models.response.ProblemResponse;
 import com.sibanarayan.code.models.response.ProblemUserEngagementResponse;
 import com.sibanarayan.code.models.response.TestCaseResponse;
 import com.sibanarayan.code.repository.ProblemRepository;
+import com.sibanarayan.code.repository.SubmissionResultSnapshotRepository;
 import com.sibanarayan.code.repository.TestCaseRepository;
 import com.sibanarayan.code.services.ProblemService;
-import com.sibanarayan.code.specifications.ProblemSpecification;
-import com.sibanarayan.shared_package.enums.EventType;
-import com.sibanarayan.shared_package.enums.ProgrammingLanguage;
-import com.sibanarayan.shared_package.enums.RecordStatus;
+import com.sibanarayan.shared_package.enums.*;
+import com.sibanarayan.shared_package.enums.SubmissionStatus;
 import com.sibanarayan.shared_package.events.ProblemEvent;
 import com.sibanarayan.shared_package.exceptions.ResourceNotFoundException;
-import com.sibanarayan.shared_package.enums.SubmissionStatus;
+import com.sibanarayan.shared_package.security.JwtUtility;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -46,6 +47,8 @@ public class ProblemServiceImpl implements ProblemService {
     private final KafkaTemplate<String, ProblemEvent> kafkaTemplate;
     private final TestCaseRepository testCaseRepository;
     private final  JPAQueryFactory queryFactory;
+    private final JwtUtility jwtUtility;
+    private final SubmissionResultSnapshotRepository submissionResultSnapshotRepository;
 
     private static final String PROBLEM_TOPIC = "problem.events";
 
@@ -76,93 +79,108 @@ public class ProblemServiceImpl implements ProblemService {
         return mapToResponse(saved);
     }
 
+    public Map<ProblemDifficulty,Integer> getProblemsCountByDifficulty(){
+        Map<ProblemDifficulty,Integer> countByDifficulty=new HashMap<>();
+        List<Problem> problems=problemRepository.findAllByRecordStatus(RecordStatus.ACTIVE);
+
+        if(problems!=null && !problems.isEmpty() ){
+            problems.forEach(p->{
+                Integer value=countByDifficulty.getOrDefault(p.getDifficulty(),0);
+                countByDifficulty.put(p.getDifficulty(),value+1);
+            });
+        }
+
+        return countByDifficulty;
+    }
     @Override
-    public Page<ProblemResponse> getProblems(ProblemFilterRequest filter, UUID userId) {
+    public Page<BaseProblemResponse> getProblems(ProblemFilterRequest filter, HttpServletRequest request) {
+        String token=getToken(request);
+        UUID userId=( token==null || token.isBlank()) ?null: getUserId(token);
+
         Pageable pageable =PageRequest.of(
                 filter.getPage()-1,
                 filter.getSize(),
                 Sort.by("createdAt").descending()
         );
 
+        if(userId == null){
+            return getProblemsForAdmin(false,filter.getSearch(),filter.getDifficulties(),filter.getCategories(),filter.getCompanies(),filter.getSortBy(),filter.getOrder(),pageable);
+        }
+
+        return getProblemsForUser(filter.getSearch(),filter.getDifficulties(),filter.getCategories(),filter.getCompanies(),filter.getStatus(),filter.getSortBy(),filter.getOrder(),userId,pageable);
+    }
+
+    private Page<BaseProblemResponse> getProblemsForUser(String search,Set<ProblemDifficulty> difficulties,Set<ProblemsCategory> categories,Set<Company> companies,SolveStatus status,String sortBy,String sortOrder,UUID userId,Pageable pageable){
         QProblem problem = QProblem.problem;
+        QUserProblemEngagement engagement = QUserProblemEngagement.userProblemEngagement;
+        BooleanBuilder builder = new BooleanBuilder();
 
-        QUserProblemEngagement engagement =
-                QUserProblemEngagement.userProblemEngagement;
 
-        BooleanBuilder builder =
-                new BooleanBuilder();
+        builder.and( problem.recordStatus.eq( RecordStatus.ACTIVE ) );
 
-        builder.and(
-                problem.recordStatus.eq(
-                        RecordStatus.ACTIVE
-                )
-        );
-
-        if (filter.getCategories() != null &&
-                !filter.getCategories().isEmpty()) {
-
-            builder.and(
-                    problem.categories.any().in(
-                            filter.getCategories()
-                                    .toArray(
-                                            new ProblemsCategory[0]
-                                    )
-                    )
-            );
+        if (categories != null &&  !categories.isEmpty()) {
+            builder.and( problem.categories.any().in(categories.toArray( new ProblemsCategory[0] ) ));
+        }
+        if (companies != null && !companies.isEmpty()) {
+            builder.and(  problem.companies.any().in(companies.toArray(new Company[0])));
+        }
+        if(!search.isEmpty()){
+            builder.and(problem.title.containsIgnoreCase(search));
+        }
+        if (difficulties != null && !difficulties.isEmpty()) {
+            builder.and(problem.difficulty.in( difficulties ));
         }
 
-        if (filter.getCompanies() != null &&
-                !filter.getCompanies().isEmpty()) {
-
-            builder.and(
-                    problem.companies.any().in(
-                            filter.getCompanies()
-                                    .toArray(
-                                            new Company[0]
-                                    )
-                    )
-            );
-        }
-        if(!filter.getSearch().isEmpty()){
-            builder.and(problem.title.containsIgnoreCase(filter .getSearch()));
-        }
-
-        if (filter.getDifficulties() != null &&
-                !filter.getDifficulties().isEmpty()) {
-
-            builder.and(
-                    problem.difficulty.in(
-                            filter.getDifficulties()
-                    )
-            );
-        }
-
-        if (filter.getStatus() != null && filter.getStatus()!=SolveStatus.TODO) {
-            builder.and(
-                    engagement.solveStatus.eq(
-                            filter.getStatus()
-                    )
-            );
+        if (status != null && status!=SolveStatus.TODO) {
+            builder.and( engagement.solveStatus.eq(status));
         }
 
 
         List<Problem> problems = queryFactory
-                                    .selectFrom(problem)
-                                    .leftJoin(engagement)
-                                    .on(
-                                        engagement.problem.id.eq(problem.id),
-                                        engagement.userId.eq(userId)
-                                    )
-                                    .where(builder)
-                                    .offset(pageable.getOffset())
-                                    .limit(pageable.getPageSize())
-                                    .fetch();
+                .selectFrom(problem)
+                .leftJoin(engagement)
+                .on(
+                    engagement.problem.id.eq(problem.id),
+                    engagement.userId.eq(userId)
+                )
+                .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
 
 
         List<UUID> problemIds = problems.stream()
                 .map(Problem::getId)
                 .toList();
 
+        QSubmissionResultSnapshot snapshot = QSubmissionResultSnapshot.submissionResultSnapshot;
+
+        NumberExpression<Integer> acceptedCount = snapshot.status
+                .when(SubmissionStatus.ACCEPTED)
+                .then(1)
+                .otherwise(0)
+                .sum();
+
+        Map<UUID, Double> acceptanceRateMap = queryFactory
+                .select(snapshot.problemId,
+                        snapshot.count(),
+                        acceptedCount)
+                .from(snapshot)
+                .where(snapshot.problemId.in(problemIds))
+                .groupBy(snapshot.problemId)
+                .fetch()
+                .stream()
+                .collect(Collectors.toMap(
+                        tuple -> tuple.get(snapshot.problemId),
+                        tuple -> {
+                            Long totalCount = tuple.get(snapshot.count());
+                            Integer accepted = tuple.get(acceptedCount);
+
+                            return (totalCount != null && totalCount > 0)
+                                    ? (accepted.doubleValue() / totalCount.doubleValue()) * 100
+                                    : 0.0;
+                        }
+                ));
         Map<UUID, SolveStatus> statusMap = queryFactory
                 .selectFrom(engagement)
                 .where(
@@ -177,29 +195,34 @@ public class ProblemServiceImpl implements ProblemService {
                 ));
 
         Long total = queryFactory
-                        .select(
-                                problem.countDistinct()
-                        )
-                        .from(problem)
-                        .leftJoin(engagement)
-                        .on(
-                                engagement.problem.id.eq(problem.id),
-                                engagement.userId.eq(userId)
-                        )
-                        .where(builder)
-                        .fetchOne();
-
-        List<ProblemResponse> content = problems.stream()
-                .map(p -> ProblemResponse.builder()
-                        .id(p.getId())
-                        .title(p.getTitle())
-                        .difficulty(p.getDifficulty())
-                        .blocks(p.getBlocks())
-                        .categories(p.getCategories())
-                        .status(statusMap.getOrDefault(p.getId(), SolveStatus.TODO))
-                        .solutionByLanguage(p.getSolutionsByLanguage())
-                        .build()
+                .select(
+                        problem.countDistinct()
                 )
+                .from(problem)
+                .leftJoin(engagement)
+                .on(
+                        engagement.problem.id.eq(problem.id),
+                        engagement.userId.eq(userId)
+                )
+                .where(builder)
+                .fetchOne();
+
+        List<BaseProblemResponse> content = problems.stream()
+                .map(p -> {
+                    ProblemResponse response = new ProblemResponse();
+
+                    response.setId(p.getId());
+                    response.setTitle(p.getTitle());
+                    response.setDifficulty(p.getDifficulty());
+                    response.setDescription(p.getBlocks());
+                    response.setCategories(p.getCategories());
+                    response.setStatus(statusMap.getOrDefault(p.getId(), SolveStatus.TODO));
+                    response.setSolutionByLanguage(p.getSolutionsByLanguage());
+                    response.setAcceptanceRate(
+                            acceptanceRateMap.getOrDefault(p.getId(), 0.0)
+                    );
+                    return (BaseProblemResponse)response;
+                })
                 .toList();
         return new PageImpl<>(
                 content,
@@ -207,34 +230,51 @@ public class ProblemServiceImpl implements ProblemService {
                 total
         );
     }
+    public Page<BaseProblemResponse> getProblemsForAdmin(ProblemFilterRequest filter,HttpServletRequest request){
+        String token=getToken(request);
 
-    public Page<AdminProblemResponse> getSystemProblems(AdminProblemPageFilter filter) {
         Pageable pageable =PageRequest.of(
-                filter.getPage(),
+                filter.getPage()-1,
                 filter.getSize(),
                 Sort.by("createdAt").descending()
         );
+        return getProblemsForAdmin(true,filter.getSearch(),filter.getDifficulties(),filter.getCategories(),filter.getCompanies(),filter.getSortBy(),filter.getOrder(),pageable);
+    }
+    private Page<BaseProblemResponse> getProblemsForAdmin(boolean showAllProblems, String search, Set<ProblemDifficulty> difficulties, Set<ProblemsCategory> categories,Set<Company> companies, String sortBy, String sortOrder, Pageable pageable) {
+
         QProblem problem=QProblem.problem;
         QSubmissionResultSnapshot submissionResultSnapshot=QSubmissionResultSnapshot.submissionResultSnapshot;
         BooleanBuilder builder=new BooleanBuilder();
 
-        builder.and(problem.recordStatus.eq(RecordStatus.ACTIVE));
+        if(!showAllProblems)
+            builder.and(problem.recordStatus.eq(RecordStatus.ACTIVE));
 
-        if(!filter.getSearch().isEmpty()){
-            builder.and(problem.title.containsIgnoreCase(filter .getSearch()));
-        }
-        if(filter.getDifficulty()!=null){
-            builder.and(problem.difficulty.eq(filter.getDifficulty()));
+        if (categories != null &&  !categories.isEmpty()) {
+            builder.and( problem.categories.any().in(categories.toArray( new ProblemsCategory[0] ) ));
         }
 
-
-        OrderSpecifier<?> order;
-
-        if (filter.getOrder().equals("asc")) {
-            order = filter.getSortBy().equals("createdAt") ? problem.createdAt.asc() : problem.difficulty.asc();
-        } else {
-            order = filter.getSortBy().equals("createdAt") ? problem.createdAt.desc() : problem.difficulty.desc();
+        if (companies != null && !companies.isEmpty()) {
+            builder.and(  problem.companies.any().in(companies.toArray(new Company[0])));
         }
+
+        if(search!=null && !search.isEmpty()){
+            builder.and(problem.title.containsIgnoreCase(search));
+        }
+        if(difficulties!=null && !difficulties.isEmpty()){
+            builder.and(problem.difficulty.in(difficulties));
+        }
+
+
+        OrderSpecifier<?> order=null;
+
+        if(sortOrder!=null){
+            if (sortOrder.equals("asc")) {
+                order = sortBy.equals("createdAt") ? problem.createdAt.asc() : problem.difficulty.asc();
+            } else {
+                order = sortBy.equals("createdAt") ? problem.createdAt.desc() : problem.difficulty.desc();
+            }
+        }
+
 
 
         NumberExpression<Integer> acceptedCount = submissionResultSnapshot.status
@@ -249,7 +289,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .leftJoin(submissionResultSnapshot).on(problem.id.eq(submissionResultSnapshot.problemId))
                 .groupBy(problem.id)
                 .where(builder)
-                .orderBy(order)
+                .orderBy(order==null?problem.order.asc() : order)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -262,8 +302,8 @@ public class ProblemServiceImpl implements ProblemService {
                 .where(builder)
                 .fetchOne();
 
-        List<AdminProblemResponse> content = list.stream().map(tuple -> {
-            Problem p = tuple.get(problem);  // ← get the whole entity first
+        List<BaseProblemResponse> content = list.stream().map(tuple -> {
+            Problem p = tuple.get(problem);
             Long totalCount = tuple.get(submissionResultSnapshot.countDistinct());
             Integer accepted = tuple.get(acceptedCount);
 
@@ -271,14 +311,16 @@ public class ProblemServiceImpl implements ProblemService {
                     ? (accepted.doubleValue() / totalCount.doubleValue()) * 100
                     : 0.0;
 
-            return AdminProblemResponse.builder()
-                    .acceptanceRate(acceptanceRate)
-                    .title(p.getTitle())           // ← from entity
-                    .description(p.getBlocks())    // ← from entity
-                    .id(p.getId())                 // ← from entity
-                    .difficulty(p.getDifficulty()) // ← from entity
-                    .categories(p.getCategories()) // ← from entity
-                    .build();
+            BaseProblemResponse response = new BaseProblemResponse();
+
+            response.setAcceptanceRate(acceptanceRate);
+            response.setTitle(p.getTitle());
+            response.setDescription(p.getBlocks());
+            response.setId(p.getId());
+            response.setDifficulty(p.getDifficulty());
+            response.setCategories(p.getCategories());
+
+            return response;
         }).toList();
 
         return new PageImpl<>(content, pageable, total);
@@ -301,38 +343,63 @@ public class ProblemServiceImpl implements ProblemService {
         QProblem pr =QProblem.problem;
         QUserProblemEngagement upe=QUserProblemEngagement.userProblemEngagement;
 
+        BooleanBuilder joinCondition=new BooleanBuilder();
+        joinCondition.and(pr.id.eq(upe.problem.id));
+
+        double acceptanceRate=0.0;
+        boolean isSolved=false;
+
+        List<SubmissionResultSnapshot> submissions=submissionResultSnapshotRepository.findByProblemId(problemId);
+        if(submissions!=null && !submissions.isEmpty()){
+            double totalSubmissions=submissions.size();
+            List<SubmissionResultSnapshot> accepted=submissions.stream().filter(s->s.getStatus()==SubmissionStatus.ACCEPTED).toList();
+            double acceptedCount=accepted.size();
+            if(userId!=null)
+                isSolved=!accepted.stream().filter(s->s.getUserId()==userId).toList().isEmpty();
+            acceptanceRate=(acceptedCount/totalSubmissions)*100;
+        }
+
+
+        if (userId != null) {
+            joinCondition.and(upe.userId.eq(userId));
+        }
 
         Tuple row=queryFactory.select(
                 pr,
                 upe.liked,
                 upe.saved,
-                upe, upe.favorite
-        )
+                upe.favorite
+                )
                 .from(pr)
                 .leftJoin(upe)
-                .on(pr.id.eq(upe.problem.id)
-                        .and(upe.userId.eq(userId)))
+                .on(joinCondition)
                 .where(pr.recordStatus.eq(RecordStatus.ACTIVE)
                         .and(pr.id.eq(problemId)))
                 .fetchOne();
+
         if (row == null) throw new ResourceNotFoundException("Problem not found");
 
         Problem problem = row.get(pr);
 
-        return new ProblemUserEngagementResponse(
+        return  new ProblemUserEngagementResponse(
                 problem.getTitle(),
                 problem.getBlocks(),
                 Boolean.TRUE.equals(row.get(upe.saved)),
                 Boolean.TRUE.equals(row.get(upe.liked)),
                 Boolean.TRUE.equals(row.get(upe.favorite)),
+                problem.getTotalLikes(),
+                problem.getTotalDislikes(),
+                acceptanceRate,
+                isSolved?SolveStatus.SOLVED:SolveStatus.TODO,
                 problem.getId(),
                 problem.getDifficulty(),
                 problem.getCategories()
         );
+
     }
 
     @Override
-    public ProblemResponse getProblem (UUID problemId){
+    public ProblemResponse getProblem(UUID problemId){
        Optional<Problem> exist= problemRepository.findByIdAndRecordStatus(problemId,RecordStatus.ACTIVE);
        if(exist.isEmpty()){
            throw new ResourceNotFoundException("Problem with  this id does not exist");
@@ -341,7 +408,7 @@ public class ProblemServiceImpl implements ProblemService {
         Problem pr=exist.get();
         return ProblemResponse.builder()
                 .title(pr.getTitle())
-                .blocks(pr.getBlocks())
+                .description(pr.getBlocks())
                 .id(pr.getId())
                 .categories(pr.getCategories())
                 .solutionByLanguage(pr.getSolutionsByLanguage())
@@ -433,6 +500,20 @@ public class ProblemServiceImpl implements ProblemService {
 
     private <T> Set<T> safeSet(Set<T> values) {
         return values == null ? Set.of() : values;
+    }
+
+
+
+    private String getToken(HttpServletRequest request){
+        return jwtUtility.extractTokenFromCookie(request);
+    }
+
+    private UUID getUserId(String token){
+        return jwtUtility.getUserId(token);
+    }
+
+    private String getUserRole(String token){
+        return  jwtUtility.getCurrentUser().getRole();
     }
 
 }

@@ -72,4 +72,12 @@ public class Problem extends Base {
     @Column(name="order_no")
     private Integer order;
 
+    @Column(name="total_likes")
+    private Integer totalLikes;
+
+    @Column(name="total_dislikes")
+    private Integer totalDislikes;
+
+
+
 }

@@ -1,6 +1,7 @@
 package com.sibanarayan.code.config.security;
 
 import com.sibanarayan.code.handlers.OAuth2SuccessHandler;
+import com.sibanarayan.code.handlers.RestAccessDeniedHandler;
 import com.sibanarayan.shared_package.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,8 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
 
     @Bean
@@ -34,7 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
 
-                http
+        http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
@@ -43,11 +46,22 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/user/auth/*",
+                                "/api/v1/problems",
+                                "/api/v1/problems/{problemId}",
+                                "/api/v1/problems/{problemId}/testCases",
+                                "/api/v1/problems/{problemId}/testCases/all",
+                                "/api/v1/problems/count-by-difficulty",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/api/v1/presence/**",
+                                "/ws/**",
                                 "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler)
                 )
                 .oauth2Login(oauth -> oauth
                         .successHandler(oAuth2SuccessHandler)
