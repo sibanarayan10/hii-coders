@@ -14,6 +14,7 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ import java.util.UUID;
 public interface ProblemRepository extends JpaRepository<Problem, UUID>, JpaSpecificationExecutor<Problem>, QuerydslPredicateExecutor<Problem> {
 
     Page<Problem> findAllByRecordStatus(RecordStatus recordStatus, Pageable pageable);
+    List<Problem> findAllByRecordStatus(RecordStatus recordStatus);
 
     Page<Problem> findAllByDifficultyAndRecordStatus(
             ProblemDifficulty difficulty, RecordStatus recordStatus, Pageable pageable);

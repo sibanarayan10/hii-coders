@@ -6,22 +6,17 @@ import com.sibanarayan.code.enums.SolveStatus;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.shared_package.enums.ProgrammingLanguage;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.*;
 
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProblemResponse {
-    private UUID id;
-    private String title;
-    private ProblemDifficulty difficulty;
-    private Set<ProblemsCategory> categories;
+public class ProblemResponse extends BaseProblemResponse {
     private SolveStatus status;
-    private List<CreateProblemRequest.Block> blocks;
     private Map<ProgrammingLanguage,String> solutionByLanguage;
     private Map<ProgrammingLanguage,String> ioByLanguage;
-
 }

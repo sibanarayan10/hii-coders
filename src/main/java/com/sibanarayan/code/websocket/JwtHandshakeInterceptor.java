@@ -33,17 +33,12 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         }
 
         String token = extractTokenFromCookie(servletRequest.getServletRequest());
-        if (token == null || !jwtUtility.isTokenValid(token)) {
-            return false; // Reject unauthenticated connections
+        if (token != null && jwtUtility.isTokenValid(token)) {
+            attributes.put("userId", jwtUtility.getUserId(token));
+            attributes.put("email", jwtUtility.getEmail(token));
         }
-
-        UUID userId = jwtUtility.getUserId(token);
-        String email = jwtUtility.getEmail(token);
-
-        attributes.put("userId", userId);
-        attributes.put("email", email);
-
         return true;
+
     }
 
     @Override

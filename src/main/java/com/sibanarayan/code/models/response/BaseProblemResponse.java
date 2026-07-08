@@ -4,16 +4,19 @@ import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.enums.ProblemsCategory;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-@Builder
+
+
+@SuperBuilder
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AdminProblemResponse {
+public class BaseProblemResponse {
     private String title;
     private List<CreateProblemRequest.Block> description;
     private UUID id;

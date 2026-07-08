@@ -27,10 +27,15 @@ public class PresenceController {
             @Payload ProblemPresenceRequest request,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        UUID userId = getUserId(headerAccessor);
-        if (userId == null || request.getProblemId() == null) return;
+        if(request.getProblemId()==null){
+            return;
+        }
 
-        presenceTracker.userEnteredProblem(userId, request.getProblemId());
+        UUID userId = getUserId(headerAccessor);
+        if(userId != null){
+            presenceTracker.userEnteredProblem(userId, request.getProblemId());
+        }
+
         eventListener.broadcastProblemPresence(request.getProblemId());
         eventListener.broadcastPlatformPresence();
     }

@@ -1,11 +1,12 @@
 package com.sibanarayan.code.controllers;
 
 import com.sibanarayan.code.customAnnotation.Role;
+import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.models.request.AdminProblemPageFilter;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
 import com.sibanarayan.code.models.request.TestCaseRequest;
-import com.sibanarayan.code.models.response.AdminProblemResponse;
+import com.sibanarayan.code.models.response.BaseProblemResponse;
 import com.sibanarayan.code.models.response.ProblemResponse;
 import com.sibanarayan.code.models.response.ProblemUserEngagementResponse;
 import com.sibanarayan.code.models.response.TestCaseResponse;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -31,7 +33,6 @@ import java.util.UUID;
 public class ProblemController {
 
     private final ProblemService problemService;
-    private final JwtAuthFilter jwtAuthFilter;
     private final JwtUtility jwtUtility;
 
     @PostMapping
@@ -45,23 +46,26 @@ public class ProblemController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProblemResponse>> getProblems(
+    public ResponseEntity<Page<BaseProblemResponse>> getProblems(
             @ModelAttribute ProblemFilterRequest filter,HttpServletRequest request) {
-        String token= jwtUtility.extractTokenFromCookie(request);
-        UUID userId=jwtUtility.getUserId(token);
-        return ResponseEntity.ok(problemService.getProblems(filter,userId));
+        return ResponseEntity.ok(problemService.getProblems(filter,request));
+    }
+
+    @GetMapping("count-by-difficulty")
+    public ResponseEntity<Map<ProblemDifficulty,Integer>> getProblemsCountByDifficulty(){
+        return ResponseEntity.ok(problemService.getProblemsCountByDifficulty());
     }
 
     @GetMapping("system")
     @Role("ADMIN")
-    public ResponseEntity<Page<AdminProblemResponse>> getSystemProblems(@ModelAttribute AdminProblemPageFilter filter){
-        return ResponseEntity.ok(problemService.getSystemProblems(filter));
+    public ResponseEntity<Page<BaseProblemResponse>> getProblemsForAdmin(@ModelAttribute ProblemFilterRequest filter,HttpServletRequest request){
+        return ResponseEntity.ok(problemService.getProblemsForAdmin(filter,request));
     }
 
     @GetMapping("/{problemId}")
     public ResponseEntity<ProblemUserEngagementResponse> getProblemUserEngagementDetail(@PathVariable UUID problemId, HttpServletRequest request) {
         String token= jwtUtility.extractTokenFromCookie(request);
-        UUID userId=jwtUtility.getUserId(token);
+        UUID userId=token==null?null:jwtUtility.getUserId(token);
         return ResponseEntity.ok(problemService.getProblemUserEngagementDetail(problemId,userId));
     }
 

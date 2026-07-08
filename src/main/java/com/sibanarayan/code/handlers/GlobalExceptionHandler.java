@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Map<String, Object>> handleUnauthorized(
             UnauthorizedException ex) {
-        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+        return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
     // ── 404 Not Found ────────────────────────────────────────────────────────

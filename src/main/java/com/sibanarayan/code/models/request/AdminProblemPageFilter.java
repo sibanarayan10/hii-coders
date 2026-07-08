@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 @Setter
 @Getter
-
+@AllArgsConstructor
 public class AdminProblemPageFilter {
     private String search;
     private String sortBy;
