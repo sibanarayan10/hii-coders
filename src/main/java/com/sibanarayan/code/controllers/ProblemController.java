@@ -96,6 +96,13 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.createTestCase(request));
     }
 
+    @PutMapping("{problemId}/toggle-like")
+    public ResponseEntity<Boolean> toggleLike(@PathVariable UUID problemId, HttpServletRequest request){
+        String token=jwtUtility.extractTokenFromCookie(request);
+        UUID userId=jwtUtility.getUserId(token);
+        return ResponseEntity.ok(problemService.toggleLike(problemId,userId));
+    }
+
 
 
 

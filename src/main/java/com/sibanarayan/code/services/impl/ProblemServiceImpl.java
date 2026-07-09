@@ -20,6 +20,7 @@ import com.sibanarayan.code.models.response.TestCaseResponse;
 import com.sibanarayan.code.repository.ProblemRepository;
 import com.sibanarayan.code.repository.SubmissionResultSnapshotRepository;
 import com.sibanarayan.code.repository.TestCaseRepository;
+import com.sibanarayan.code.repository.UserProblemEngagementRepository;
 import com.sibanarayan.code.services.ProblemService;
 import com.sibanarayan.shared_package.enums.*;
 import com.sibanarayan.shared_package.enums.SubmissionStatus;
@@ -49,6 +50,7 @@ public class ProblemServiceImpl implements ProblemService {
     private final  JPAQueryFactory queryFactory;
     private final JwtUtility jwtUtility;
     private final SubmissionResultSnapshotRepository submissionResultSnapshotRepository;
+    private final UserProblemEngagementRepository userProblemEngagementRepository;
 
     private static final String PROBLEM_TOPIC = "problem.events";
 
@@ -231,10 +233,9 @@ public class ProblemServiceImpl implements ProblemService {
         );
     }
     public Page<BaseProblemResponse> getProblemsForAdmin(ProblemFilterRequest filter,HttpServletRequest request){
-        String token=getToken(request);
 
         Pageable pageable =PageRequest.of(
-                filter.getPage()-1,
+                filter.getPage(),
                 filter.getSize(),
                 Sort.by("createdAt").descending()
         );
@@ -347,15 +348,23 @@ public class ProblemServiceImpl implements ProblemService {
         joinCondition.and(pr.id.eq(upe.problem.id));
 
         double acceptanceRate=0.0;
-        boolean isSolved=false;
+        SolveStatus status=SolveStatus.TODO;
 
         List<SubmissionResultSnapshot> submissions=submissionResultSnapshotRepository.findByProblemId(problemId);
         if(submissions!=null && !submissions.isEmpty()){
             double totalSubmissions=submissions.size();
             List<SubmissionResultSnapshot> accepted=submissions.stream().filter(s->s.getStatus()==SubmissionStatus.ACCEPTED).toList();
             double acceptedCount=accepted.size();
-            if(userId!=null)
-                isSolved=!accepted.stream().filter(s->s.getUserId()==userId).toList().isEmpty();
+            if(userId!=null) {
+                List<SubmissionResultSnapshot> userSubmissions = submissions.stream().filter(s -> s.getUserId().equals(userId)).toList();
+                if(!userSubmissions.isEmpty()){
+                    status=SolveStatus.ATTEMPTED;
+                }
+                boolean foundAcceptedSubmission=!userSubmissions.stream().filter(s->s.getStatus()==SubmissionStatus.ACCEPTED).toList().isEmpty();
+                if(foundAcceptedSubmission){
+                    status=SolveStatus.SOLVED;
+                }
+            }
             acceptanceRate=(acceptedCount/totalSubmissions)*100;
         }
 
@@ -375,7 +384,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .on(joinCondition)
                 .where(pr.recordStatus.eq(RecordStatus.ACTIVE)
                         .and(pr.id.eq(problemId)))
-                .fetchOne();
+                .fetchFirst();
 
         if (row == null) throw new ResourceNotFoundException("Problem not found");
 
@@ -390,7 +399,7 @@ public class ProblemServiceImpl implements ProblemService {
                 problem.getTotalLikes(),
                 problem.getTotalDislikes(),
                 acceptanceRate,
-                isSolved?SolveStatus.SOLVED:SolveStatus.TODO,
+                status,
                 problem.getId(),
                 problem.getDifficulty(),
                 problem.getCategories()
@@ -433,6 +442,46 @@ public class ProblemServiceImpl implements ProblemService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    public boolean toggleLike(UUID problemId,UUID userId){
+        Optional<UserProblemEngagement> upeWrapper= userProblemEngagementRepository.findByUserIdAndProblem_Id(userId,problemId);
+
+        UserProblemEngagement upe;
+
+        Optional<Problem> problemWrapper=problemRepository.findByIdAndRecordStatus(problemId,RecordStatus.ACTIVE);
+        if(problemWrapper.isEmpty()){
+            throw  new ResourceNotFoundException("Invalid request");
+        }
+
+        Problem p=problemWrapper.get();
+
+        if(upeWrapper.isPresent()){
+             upe=upeWrapper.get();
+             boolean prevValue=upe.isLiked();
+             upe.setLiked(!prevValue);
+        }else{
+            upe= UserProblemEngagement.builder()
+                    .liked(true)
+                    .saved(false)
+                    .favorite(false)
+                    .problem(p)
+                    .solveStatus(SolveStatus.TODO)
+                    .userId(userId)
+                    .build();
+        }
+
+        userProblemEngagementRepository.save(upe);
+        log.info("User {} response on the problem {} updated successfully",userId,problemId);
+
+        int totalLikes=p.getTotalLikes()==null?0:p.getTotalLikes();
+        p.setTotalLikes(upe.isLiked()?totalLikes+1:Math.max(0,totalLikes-1));
+
+        problemRepository.save(p);
+
+        log.info("Problem {} totalLike count updated successfully",problemId);
+
+        return true;
     }
 
     public Boolean createTestCase(TestCaseRequest request) {
