@@ -26,4 +26,5 @@ public interface ProblemService {
     ProblemResponse getProblem (UUID problemId);
     Page<BaseProblemResponse> getProblemsForAdmin(ProblemFilterRequest filter,HttpServletRequest request);
     Map<ProblemDifficulty,Integer> getProblemsCountByDifficulty();
+    boolean toggleLike(UUID problemId,UUID userId);
 }
