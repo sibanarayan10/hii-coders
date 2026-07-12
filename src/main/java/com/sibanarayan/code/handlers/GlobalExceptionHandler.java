@@ -6,6 +6,7 @@ import com.sibanarayan.code.exceptions.UnauthorizedException;
 import com.sibanarayan.shared_package.exceptions.EntityAlreadyExistException;
 import com.sibanarayan.shared_package.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -61,7 +62,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    // ── 500 Fallback ─────────────────────────────────────────────────────────
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         log.error("Unexpected error occurred", ex);
@@ -70,7 +70,6 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred");
     }
 
-    // ── Helper ───────────────────────────────────────────────────────────────
     private ResponseEntity<Map<String, Object>> build(HttpStatus status,
                                                       String message) {
         Map<String, Object> body = new LinkedHashMap<>();

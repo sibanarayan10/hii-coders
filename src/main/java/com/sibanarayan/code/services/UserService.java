@@ -21,5 +21,5 @@ public interface UserService {
     boolean toggleUserStatus(UUID userId, RecordStatus status);
     List<UserResponse> getRecentUsers();
     UserMetrics getUserMetrics();
-    ResponseEntity<String> resetPassword( String password, String token);
+    void resetPassword( String password, String token,HttpServletResponse response);
 }

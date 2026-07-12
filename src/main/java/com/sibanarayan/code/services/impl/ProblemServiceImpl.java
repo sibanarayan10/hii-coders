@@ -12,11 +12,9 @@ import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.enums.ProblemsCategory;
 import com.sibanarayan.code.models.request.CreateProblemRequest;
 import com.sibanarayan.code.models.request.ProblemFilterRequest;
-import com.sibanarayan.code.models.request.TestCaseRequest;
 import com.sibanarayan.code.models.response.BaseProblemResponse;
 import com.sibanarayan.code.models.response.ProblemResponse;
 import com.sibanarayan.code.models.response.ProblemUserEngagementResponse;
-import com.sibanarayan.code.models.response.TestCaseResponse;
 import com.sibanarayan.code.repository.ProblemRepository;
 import com.sibanarayan.code.repository.SubmissionResultSnapshotRepository;
 import com.sibanarayan.code.repository.TestCaseRepository;
@@ -426,22 +424,13 @@ public class ProblemServiceImpl implements ProblemService {
                 .build();
 
     }
-    public List<TestCaseResponse> getTestCasesByProblemId(UUID problemId) {
-        return getTestCaseByProblemId(problemId,true);
-    }
 
-    public List<TestCaseResponse> getTestCaseByProblemId(UUID problemId,boolean isSampleOnly){
-        return    testCaseRepository.getByProblemIdAndSampleAndRecordStatus(problemId,isSampleOnly,RecordStatus.ACTIVE)
-                    .stream()
-                    .map(this::mapToResponse)
-                    .toList();
-    }
+    public void existById(UUID problemId,RecordStatus recordStatus){
+        Optional<Problem> problemWrapper=problemRepository.findByIdAndRecordStatus(problemId, recordStatus);
+        if(problemWrapper.isEmpty()){
+            throw new ResourceNotFoundException("Problem not found");
+        }
 
-    public List<TestCaseResponse> getAllByProblemId(UUID problemId){
-        return  testCaseRepository.getByProblemIdAndRecordStatus(problemId,RecordStatus.ACTIVE)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
     }
 
     public boolean toggleLike(UUID problemId,UUID userId){
@@ -484,27 +473,6 @@ public class ProblemServiceImpl implements ProblemService {
         return true;
     }
 
-    public Boolean createTestCase(TestCaseRequest request) {
-        var problem = problemRepository.findById(request.getProblemId())
-                .orElseThrow(() -> new ResourceNotFoundException("Problem not found"));
-
-        TestCase testCase = TestCase.builder()
-                .problem(problem)
-                .sample(request.isSample())
-                .expectedOutput(request.getExpectedOutput())
-                .inputData(request.getInputData())
-                .outputFileKey(request.getOutputFileKey())
-                .inputFileKey(request.getInputFileKey())
-                .storageType(request.getStorageType())
-                .sequenceOrder(request.getSequenceOrder())
-                .memoryLimit(request.getMemoryLimit())
-                .timeLimit(request.getTimeLimit())
-                .build();
-
-        testCaseRepository.save(testCase);
-
-        return true;
-    }
 
     private void publishEvent(UUID problemId,String title,EventType eventType){
         publishEvent(problemId,title,eventType,new HashMap<>());
@@ -538,20 +506,6 @@ public class ProblemServiceImpl implements ProblemService {
                 .categories(entity.getCategories())
                 .build();
     }
-    private TestCaseResponse mapToResponse(TestCase testCase){
-        return TestCaseResponse.builder()
-                .id(testCase.getId())
-                .inputData(testCase.getInputData())
-                .expectedOutput(testCase.getExpectedOutput())
-                .sequenceOrder(testCase.getSequenceOrder())
-                .build();
-    }
-
-    private <T> Set<T> safeSet(Set<T> values) {
-        return values == null ? Set.of() : values;
-    }
-
-
 
     private String getToken(HttpServletRequest request){
         return jwtUtility.extractTokenFromCookie(request);

@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface TestCaseRepository extends JpaRepository<TestCase,UUID> {
     List<TestCase> getByProblemIdAndRecordStatus(UUID problemId, RecordStatus status);
-    List<TestCase> getByProblemIdAndSampleAndRecordStatus(UUID problemId, boolean sample, RecordStatus status);
+    List<TestCase> getByProblemIdAndHiddenAndRecordStatus(UUID problemId, boolean hidden, RecordStatus status);
 }
 
 

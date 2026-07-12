@@ -23,9 +23,12 @@ import com.sibanarayan.shared_package.exceptions.EntityAlreadyExistException;
 import com.sibanarayan.shared_package.security.JwtUtility;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
+import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -36,13 +39,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class UserServiceImpl implements UserService,SubmissionResultSnapshotService{
@@ -56,7 +60,10 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
     private final EmailServiceImpl emailServiceImpl;
     private final CookieUtility cookieUtility;
 
-    private final  String TOPIC="user.event";
+    private String TOPIC="user.event";
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public User createUser(CreateUserRequest request){
         Optional<User> userContainer = userRepository.findByEmail(request.getEmail());
@@ -285,35 +292,42 @@ public class UserServiceImpl implements UserService,SubmissionResultSnapshotServ
 
     }
 
-    public ResponseEntity<String> resetPassword(String password, String token){
+    public void resetPassword(String password, String token,HttpServletResponse response) {
 
         if(token.isEmpty() || password.isEmpty()){
-            return  ResponseEntity.badRequest().body("Invalid request !");
+            throw new IllegalArgumentException("Invalid request !");
         }
 
         Optional<PendingLink> linkContainer = pendingLinkRepository.findByToken(token);
         if (linkContainer.isEmpty()) {
-            return ResponseEntity.badRequest().body("Link expired !!");
+            throw new IllegalArgumentException("Link expired !!");
         }
         PendingLink pendingLink=linkContainer.get();
         String email=pendingLink.getEmail();
 
         if (pendingLink.getExpiresAt().isBefore(LocalDateTime.now())) {
             pendingLinkRepository.delete(pendingLink);
-            return ResponseEntity.badRequest().body("Link expired. Please try again.");
+            throw new IllegalArgumentException("Link expired. Please try again.");
         }
 
        Optional<User> userContainer= userRepository.findByEmail(email);
-        if(userContainer.isPresent()){
+        if(userContainer.isEmpty()){
+            throw new IllegalArgumentException("User not found with given credentials");
+        }
+
+        try{
             User user=userContainer.get();
             String encodedPassword=passwordEncoder.encode(password);
             user.setPassword(encodedPassword);
             userRepository.save(user);
             pendingLinkRepository.delete(pendingLink);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body("Password changed successfully");
+            String redirectUrl=frontendUrl+"/auth/sign-in";
+            response.sendRedirect(redirectUrl);
+            log.info("Password changed successfully");
+        }catch(Exception e){
+            log.error("Unexpected error while resetting password", e);
+            throw new RuntimeException("Failed to reset password", e);
         }
-
-        return ResponseEntity.badRequest().body("User not found with given credentials");
 
     }
 

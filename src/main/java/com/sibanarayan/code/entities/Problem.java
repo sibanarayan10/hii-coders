@@ -3,6 +3,7 @@ package com.sibanarayan.code.entities;
 import com.sibanarayan.code.enums.Company;
 import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.enums.ProblemsCategory;
+import com.sibanarayan.code.models.embeddings.Block;
 import com.sibanarayan.shared_package.enums.ProgrammingLanguage;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,7 +28,7 @@ public class Problem extends Base {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "blocks", columnDefinition = "jsonb")
-    private List<CreateProblemRequest.Block> blocks;
+    private List<Block> blocks;
 
     @Column(nullable = false, length = 10)
     @Enumerated(EnumType.STRING)

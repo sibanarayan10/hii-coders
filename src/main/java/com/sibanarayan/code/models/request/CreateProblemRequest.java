@@ -2,6 +2,7 @@ package com.sibanarayan.code.models.request;
 
 import com.sibanarayan.code.enums.ProblemDifficulty;
 import com.sibanarayan.code.enums.ProblemsCategory;
+import com.sibanarayan.code.models.embeddings.Block;
 import com.sibanarayan.shared_package.enums.ProgrammingLanguage;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -38,17 +39,7 @@ public class CreateProblemRequest {
 
     private Map<ProgrammingLanguage,String> ioByLanguage;
 
-    @Getter
-    @Setter
-    public static class Block {
 
-        private String id;
-
-        private String type;
-
-        private Map<String, Object> data;
-
-    }
 
 }
 

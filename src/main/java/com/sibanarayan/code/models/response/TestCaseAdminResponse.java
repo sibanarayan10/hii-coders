@@ -1,21 +1,23 @@
-package com.sibanarayan.code.models.request;
+package com.sibanarayan.code.models.response;
 
 import com.sibanarayan.code.models.embeddings.Block;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
 
+@Setter
+@Builder
 @Getter
 @AllArgsConstructor
-public class TestCaseRequest {
+@NoArgsConstructor
+public class TestCaseAdminResponse {
     private UUID id;
-    private UUID problemId;
     private List<Block> displayInput;
     private List<Block> displayOutput;
-    private Boolean hidden;
     private String input;
-    private String expectedOutput;
+    private String output;
+    private boolean hidden;
     private String explanation;
+    private UUID problemId;
 }

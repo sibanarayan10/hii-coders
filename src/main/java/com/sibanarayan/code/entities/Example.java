@@ -23,5 +23,5 @@ public class Example {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private List<CreateProblemRequest.Block> blocks;
+    private List<CreateProblemRequest> blocks;
 }

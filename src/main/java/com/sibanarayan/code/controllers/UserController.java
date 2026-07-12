@@ -116,16 +116,22 @@ public class UserController {
                 .build();
     }
     @PostMapping("/api/v1/user/auth/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body, @RequestParam String token){
+    public void resetPassword(@RequestBody Map<String, String> body, @RequestParam String token,HttpServletResponse response){
         String password=body.get("password");
-        return userService.resetPassword(password,token);
+        userService.resetPassword(password,token,response);
     }
 
     @GetMapping("/api/v1/user/auth/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Email not registered"));
+                .orElseThrow(() -> new IllegalArgumentException("Email not registered"));
+
+        Optional<PendingLink> pendingLinkWrapper=pendingLinkRepository.findByEmail(email);
+
+        if(pendingLinkWrapper.isPresent()){
+           return ResponseEntity.ok("Link already sent.Please check your email");
+        }
 
         String token = UUID.randomUUID().toString();
 

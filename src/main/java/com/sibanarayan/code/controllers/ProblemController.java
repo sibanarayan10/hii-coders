@@ -2,15 +2,10 @@ package com.sibanarayan.code.controllers;
 
 import com.sibanarayan.code.customAnnotation.Role;
 import com.sibanarayan.code.enums.ProblemDifficulty;
-import com.sibanarayan.code.models.request.AdminProblemPageFilter;
-import com.sibanarayan.code.models.request.CreateProblemRequest;
-import com.sibanarayan.code.models.request.ProblemFilterRequest;
-import com.sibanarayan.code.models.request.TestCaseRequest;
-import com.sibanarayan.code.models.response.BaseProblemResponse;
-import com.sibanarayan.code.models.response.ProblemResponse;
-import com.sibanarayan.code.models.response.ProblemUserEngagementResponse;
-import com.sibanarayan.code.models.response.TestCaseResponse;
+import com.sibanarayan.code.models.request.*;
+import com.sibanarayan.code.models.response.*;
 import com.sibanarayan.code.services.ProblemService;
+import com.sibanarayan.code.services.TestcaseService;
 import com.sibanarayan.shared_package.security.JwtAuthFilter;
 import com.sibanarayan.shared_package.security.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +29,7 @@ public class ProblemController {
 
     private final ProblemService problemService;
     private final JwtUtility jwtUtility;
+    private final TestcaseService testcaseService;
 
     @PostMapping
     @Role("ADMIN")
@@ -81,20 +77,7 @@ public class ProblemController {
         return ResponseEntity.ok(true);
     }
 
-    @GetMapping("/{problemId}/testCases")
-    public ResponseEntity<List<TestCaseResponse>> getTestCasesByProblem(@PathVariable UUID problemId) {
-        return ResponseEntity.ok(problemService.getTestCasesByProblemId(problemId));
-    }
 
-    @GetMapping("/{problemId}/testCases/all")
-    public ResponseEntity<List<TestCaseResponse>> getAllTestCasesByProblem(@PathVariable UUID problemId) {
-        return ResponseEntity.ok(problemService.getAllByProblemId(problemId));
-    }
-    @PostMapping("/{problemId}/testCase")
-    @Role("ADMIN")
-    public ResponseEntity<Boolean> createTestCase(@RequestBody TestCaseRequest request) {
-        return ResponseEntity.ok(problemService.createTestCase(request));
-    }
 
     @PutMapping("{problemId}/toggle-like")
     public ResponseEntity<Boolean> toggleLike(@PathVariable UUID problemId, HttpServletRequest request){
@@ -104,6 +87,42 @@ public class ProblemController {
     }
 
 
+
+    @GetMapping("/{problemId}/testCases/execution")
+    public ResponseEntity<List<TestCaseExecutionResponse>> getAllTestCasesByProblemForExecution(@PathVariable UUID problemId) {
+        return ResponseEntity.ok(testcaseService.getAllTestCaseByProblemIdForExecution(problemId));
+    }
+
+    @GetMapping("/{problemId}/testCases/admin")
+    @Role("ADMIN")
+    public ResponseEntity<List<TestCaseAdminResponse>> getAllTestCasesByProblemForAdmin(@PathVariable UUID problemId) {
+        return ResponseEntity.ok(testcaseService.getAllTestCaseByProblemIdForAdmin(problemId));
+    }
+
+    @GetMapping("/{problemId}/testCases/preview")
+    public ResponseEntity<List<TestCasePreviewResponse>> getAllTestCasesByProblemForPreview(@PathVariable UUID problemId) {
+        return ResponseEntity.ok(testcaseService.getAllTestCaseByProblemIdForPreview(problemId));
+    }
+    @PostMapping("/{problemId}/testCases")
+    @Role("ADMIN")
+    public ResponseEntity<String> createTestCase(@RequestBody CreateTestcaseRequest request) {
+        testcaseService.createAllTestcase(request.getTestCases(),request.getProblemId());
+        return ResponseEntity.ok("All testcase created successfully");
+    }
+
+    @PutMapping("{problemId}/testCases/{testcaseId}")
+    @Role("ADMIN")
+    public ResponseEntity<String> updateTestcase(@RequestBody TestCaseRequest update){
+        testcaseService.updateTestcase(update);
+        return ResponseEntity.ok("Testcase updated successfully");
+    }
+
+    @PutMapping("{problemId}/testCases/{testcaseId}/delete")
+    @Role("ADMIN")
+    public ResponseEntity<String> deleteTestcase(@PathVariable UUID testcaseId){
+        testcaseService.deleteTestcase(testcaseId);
+        return ResponseEntity.ok("Testcase deleted successfully");
+    }
 
 
 }

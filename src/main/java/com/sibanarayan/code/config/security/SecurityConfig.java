@@ -49,7 +49,7 @@ public class SecurityConfig {
                                 "/api/v1/problems",
                                 "/api/v1/problems/{problemId}",
                                 "/api/v1/problems/{problemId}/testCases",
-                                "/api/v1/problems/{problemId}/testCases/all",
+                                "/api/v1/problems/{problemId}/testCases/execution",
                                 "/api/v1/problems/count-by-difficulty",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

@@ -1,9 +1,12 @@
 package com.sibanarayan.code.entities;
 
 import com.sibanarayan.code.enums.StorageType;
+import com.sibanarayan.code.models.embeddings.Block;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -17,36 +20,29 @@ import java.util.UUID;
 @Builder
 public class TestCase extends Base {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "problem_id", nullable = false)
-    private Problem problem;
-
-    @Column(columnDefinition = "TEXT",name="input_data")
-    private String inputData;
-
-    @Column(columnDefinition = "TEXT",name="expected_output")
-    private String expectedOutput;
-
-    @Column(name = "input_file_key")
-    private String inputFileKey;
-
-    @Column(name = "output_file_key")
-    private String outputFileKey;
-
-    @Column(name = "is_sample", nullable = false)
-    private boolean sample;
+    @Column(name = "problem_id", nullable = false)
+    private UUID problemId;
 
     @Column(name = "sequence_order", nullable = false)
     private Integer sequenceOrder;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "storage_type", nullable = false)
-    private StorageType storageType;
+    @Column(name = "hidden")
+    private boolean hidden;
 
-    @Column(name = "time_limit")
-    private Integer timeLimit;
+    @Column(name="display_input",columnDefinition = "jsonb")
+    private List<Block> displayInput;
 
-    @Column(name = "memory_limit")
-    private Integer memoryLimit;
+    @Column(name="display_output",columnDefinition = "jsonb")
+    private List<Block> displayOutput;
+
+    @Column(columnDefinition = "TEXT",name="expected_output")
+    private String expectedOutput;
+
+    @Column(name="input",columnDefinition = "TEXT")
+    private String input;
+
+    @Column(name="explanation",columnDefinition = "TEXT")
+    private String explanation;
+
 
 }
