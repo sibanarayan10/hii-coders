@@ -24,6 +24,8 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
+    private final CustomAuthorizationRequestResolver customAuthorizationRequestResolver;
+
 
 
     @Bean
@@ -51,6 +53,7 @@ public class SecurityConfig {
                                 "/api/v1/problems/{problemId}/testCases",
                                 "/api/v1/problems/{problemId}/testCases/execution",
                                 "/api/v1/problems/count-by-difficulty",
+                                "/api/v1/user/log-out",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/api/v1/presence/**",
@@ -64,6 +67,9 @@ public class SecurityConfig {
                         .accessDeniedHandler(restAccessDeniedHandler)
                 )
                 .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authorizationRequestResolver(customAuthorizationRequestResolver)
+                        )
                         .successHandler(oAuth2SuccessHandler)
                 )
                 .addFilterBefore(

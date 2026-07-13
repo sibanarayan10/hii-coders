@@ -2,6 +2,7 @@ package com.sibanarayan.code.handlers;
 
 import com.sibanarayan.code.utility.CookieUtility;
 import com.sibanarayan.code.utility.CustomOAuthUser;
+import com.sibanarayan.code.utility.OAuthStateUtility;
 import com.sibanarayan.shared_package.enums.UserRole;
 import com.sibanarayan.shared_package.security.JwtUtility;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +52,11 @@ public class OAuth2SuccessHandler
         ResponseCookie cookie = cookieUtility.buildAuthCookie(token);
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        String state = request.getParameter("state");
+        String source = OAuthStateUtility.sanitizeSource(
+                OAuthStateUtility.decodeSource(state)
+        );
 
-        response.sendRedirect(frontendUrl);
+        response.sendRedirect(frontendUrl + source);
     }
 }

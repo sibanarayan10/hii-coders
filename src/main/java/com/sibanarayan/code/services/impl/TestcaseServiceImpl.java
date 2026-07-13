@@ -1,6 +1,7 @@
 package com.sibanarayan.code.services.impl;
 
 import com.sibanarayan.code.entities.TestCase;
+import com.sibanarayan.code.models.embeddings.Block;
 import com.sibanarayan.code.models.request.TestCaseRequest;
 import com.sibanarayan.code.models.response.TestCaseAdminResponse;
 import com.sibanarayan.code.models.response.TestCaseExecutionResponse;
@@ -15,10 +16,10 @@ import com.sibanarayan.shared_package.exceptions.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
 
 
 @Service
@@ -27,6 +28,7 @@ import java.util.UUID;
 public class TestcaseServiceImpl implements TestcaseService {
     private final TestCaseRepository testCaseRepository;
     private final ProblemService problemService;
+    private final ImageService imageService;
 
 
     @Override
@@ -55,10 +57,24 @@ public class TestcaseServiceImpl implements TestcaseService {
     }
 
     @Override
+    @Transactional
     public void deleteTestcase(UUID testcaseId) {
         TestCase testCase=getTestcaseById(testcaseId);
-        testCase.setRecordStatus(RecordStatus.DELETED);
-        testCaseRepository.save(testCase);
+        List<Block> blocks=testCase.getDisplayInput()
+                .stream()
+                .filter(i->i.getType().equals("image"))
+                .toList();
+
+        List<String>imgUrls=extractPublicUrl(blocks);
+        try{
+            for(String imgPublicUrl:imgUrls){
+                imageService.deleteImage(imgPublicUrl);
+            }
+        }catch(IOException e){
+           throw new RuntimeException(e);
+        }
+
+        testCaseRepository.delete(testCase);
         log.info("Testcase deleted successfully");
     }
 
@@ -80,6 +96,7 @@ public class TestcaseServiceImpl implements TestcaseService {
     }
 
     @Override
+    @Transactional
     public void createAllTestcase(List<TestCaseRequest> list,UUID problemId) {
         if(list.isEmpty()){
             throw new IllegalArgumentException("No testcases found in the request");
@@ -150,6 +167,30 @@ public class TestcaseServiceImpl implements TestcaseService {
         testCaseRepository.save(testCase);
         log.info("Testcase-{} got created successfully",sequenceOrder);
 
+    }
+
+    private List<String> extractPublicUrl(List<Block> blocks){
+        List<String> imageUrls=new ArrayList<>();
+
+        for(Block block:blocks){
+            if (!"image".equals(block.getType())) {
+                continue;
+            }
+
+            Map<String, Object> data = block.getData();
+            if (data == null) {
+                continue;
+            }
+            Object fileObj = data.get("file");
+            if (fileObj instanceof Map<?, ?> fileMap) {
+                Object url = fileMap.get("url");
+                if (url instanceof String urlStr && !urlStr.isBlank()) {
+                    imageUrls.add(urlStr);
+                }
+            }
+        }
+
+        return imageUrls;
     }
 
 }
